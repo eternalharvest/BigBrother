@@ -60,6 +60,14 @@ use shoghicp\BigBrother\network\ProtocolInterface;
 use shoghicp\BigBrother\utils\Binary;
 use shoghicp\BigBrother\utils\InventoryUtils;
 
+//for initEntity()
+use pocketmine\entity\Living;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\ListTag;
+use pocketmine\nbt\tag\FloatTag;
+use pocketmine\nbt\tag\IntTag;
+use shoghicp\BigBrother\inventory\DesktopPlayerInventory;
+
 class DesktopPlayer extends Player{
 
 	/** @var int */
@@ -110,6 +118,109 @@ class DesktopPlayer extends Player{
 	 */
 	public function getInventoryUtils() : InventoryUtils{
 		return $this->inventoryutils;
+	}
+
+	/**
+	 * This method is just copied `Human#initEntity()` method from PMMP project.
+	 * And modified it to instantiate newly created `DesktopPlayerInventory` class.
+	 * Original code is commented out, and changes are follow by the comment.
+	 *
+	 * TODO I think we need to suggest API changes to PMMP project because `Human#initEntity()` is updated frequently and this method is too big.
+	 * TODO This code call `Living::initEntity()` directly, but this code is dangerous if the class hierarchy is changed.
+	 * TODO Consider well about the hotbar link function.
+	 *
+	 * @override
+	 */
+	protected function initEntity(){
+
+		$this->setDataFlag(self::DATA_PLAYER_FLAGS, self::DATA_PLAYER_FLAG_SLEEP, false, self::DATA_TYPE_BYTE);
+		$this->setDataProperty(self::DATA_PLAYER_BED_POSITION, self::DATA_TYPE_POS, [0, 0, 0], false);
+
+		//$this->inventory = new PlayerInventory($this);
+		$this->inventory = new DesktopPlayerInventory($this);
+		if($this instanceof Player){
+			$this->addWindow($this->inventory, 0);
+		}else{
+			if(isset($this->namedtag->NameTag)){
+				$this->setNameTag($this->namedtag["NameTag"]);
+			}
+
+			if(isset($this->namedtag->Skin) and $this->namedtag->Skin instanceof CompoundTag){
+				$this->setSkin($this->namedtag->Skin["Data"], $this->namedtag->Skin["Name"]);
+			}
+
+			$this->uuid = UUID::fromData((string) $this->getId(), $this->getSkinData(), $this->getNameTag());
+		}
+
+		if(isset($this->namedtag->Inventory) and $this->namedtag->Inventory instanceof ListTag){
+			foreach($this->namedtag->Inventory as $item){
+				if($item["Slot"] >= 0 and $item["Slot"] < 9){ //Hotbar
+					//$this->inventory->setHotbarSlotIndex($item["Slot"], isset($item["TrueSlot"]) ? $item["TrueSlot"] : -1);
+				}elseif($item["Slot"] >= 100 and $item["Slot"] < 104){ //Armor
+					//$this->inventory->setItem($this->inventory->getSize() + $item["Slot"] - 100, ItemItem::nbtDeserialize($item));
+					$this->inventory->setItem($this->inventory->getSize() + $item["Slot"] - 100, Item::nbtDeserialize($item));
+				}else{
+					//$this->inventory->setItem($item["Slot"] - 9, ItemItem::nbtDeserialize($item));
+					$this->inventory->setItem($item["Slot"] - 9, Item::nbtDeserialize($item));
+				}
+			}
+		}
+
+		if(isset($this->namedtag->SelectedInventorySlot) and $this->namedtag->SelectedInventorySlot instanceof IntTag){
+			$this->inventory->setHeldItemIndex($this->namedtag->SelectedInventorySlot->getValue(), false);
+		}else{
+			$this->inventory->setHeldItemIndex(0, false);
+		}
+
+		//parent::initEntity();
+		Living::initEntity();
+
+
+		if(!isset($this->namedtag->foodLevel) or !($this->namedtag->foodLevel instanceof IntTag)){
+			$this->namedtag->foodLevel = new IntTag("foodLevel", (int) $this->getFood());
+		}else{
+			$this->setFood((float) $this->namedtag["foodLevel"]);
+		}
+
+		if(!isset($this->namedtag->foodExhaustionLevel) or !($this->namedtag->foodExhaustionLevel instanceof FloatTag)){
+			$this->namedtag->foodExhaustionLevel = new FloatTag("foodExhaustionLevel", $this->getExhaustion());
+		}else{
+			$this->setExhaustion((float) $this->namedtag["foodExhaustionLevel"]);
+		}
+
+		if(!isset($this->namedtag->foodSaturationLevel) or !($this->namedtag->foodSaturationLevel instanceof FloatTag)){
+			$this->namedtag->foodSaturationLevel = new FloatTag("foodSaturationLevel", $this->getSaturation());
+		}else{
+			$this->setSaturation((float) $this->namedtag["foodSaturationLevel"]);
+		}
+
+		if(!isset($this->namedtag->foodTickTimer) or !($this->namedtag->foodTickTimer instanceof IntTag)){
+			$this->namedtag->foodTickTimer = new IntTag("foodTickTimer", $this->foodTickTimer);
+		}else{
+			$this->foodTickTimer = $this->namedtag["foodTickTimer"];
+		}
+
+		if(!isset($this->namedtag->XpLevel) or !($this->namedtag->XpLevel instanceof IntTag)){
+			$this->namedtag->XpLevel = new IntTag("XpLevel", $this->getXpLevel());
+		}else{
+			$this->setXpLevel((int) $this->namedtag["XpLevel"]);
+		}
+
+		if(!isset($this->namedtag->XpP) or !($this->namedtag->XpP instanceof FloatTag)){
+			$this->namedtag->XpP = new FloatTag("XpP", $this->getXpProgress());
+		}
+
+		if(!isset($this->namedtag->XpTotal) or !($this->namedtag->XpTotal instanceof IntTag)){
+			$this->namedtag->XpTotal = new IntTag("XpTotal", $this->totalXp);
+		}else{
+			$this->totalXp = $this->namedtag["XpTotal"];
+		}
+
+		if(!isset($this->namedtag->XpSeed) or !($this->namedtag->XpSeed instanceof IntTag)){
+			$this->namedtag->XpSeed = new IntTag("XpSeed", $this->xpSeed ?? ($this->xpSeed = mt_rand(-0x80000000, 0x7fffffff)));
+		}else{
+			$this->xpSeed = $this->namedtag["XpSeed"];
+		}
 	}
 
 	/**
