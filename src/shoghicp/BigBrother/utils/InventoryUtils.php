@@ -333,13 +333,6 @@ class InventoryUtils{
 
 				if($packet->slot >= 0 and $packet->slot < $this->player->getInventory()->getHotbarSize()){
 					$pk->slot = $packet->slot + 36;
-
-					$pk2 = new ContainerSetSlotPacket();//link hotbar in item
-					$pk2->windowid = ContainerSetContentPacket::SPECIAL_HOTBAR;
-					$pk2->slot = $packet->slot + 9;
-					$pk2->hotbarSlot = $packet->slot;
-					$pk2->item = $packet->item;
-					$this->player->handleDataPacket($pk2);
 				}elseif($packet->slot >= $this->player->getInventory()->getHotbarSize() and $packet->slot < $this->player->getInventory()->getSize()){
 					$pk->slot = $packet->slot;
 				}elseif($packet->slot >= $this->player->getInventory()->getSize() and $packet->slot < $this->player->getInventory()->getSize() + 4){
