@@ -454,21 +454,30 @@ class InventoryUtils{
 
 		//$item = ;
 		//$heldItem = ;
+		echo "click: $packet->mode, $packet->button; slot: $packet->slot\n";
 
 		switch($packet->mode){
 			case 0:
 				switch($packet->button){
 					case 0://Left mouse click
-						/*if($packet->item->getCount() % 2 === 0){
-							$item = clone $packet->item;
-							$item->setCount($item->getCount() / 2);
-							$item->setCount($item->getCount() / 2);
-						}else{
-							$item->setCount((($item->getCount() - 1) / 2) + 1);
-							//$item->getCount() / 2);
-						}*/
-					break;
 					case 1://Right mouse click
+						if($this->playerHeldItem === null || $this->playerHeldItem->getId() === Item::AIR || $this->playerHeldItem->getCount() === 0){
+							$this->playerHeldItem = $this->pickItem($packet->windowID, $packet->slot, $packet->button === 0);
+							echo "";
+							echo "pick $this->playerHeldItem from slot $packet->slot\n";
+						}else{
+							if($packet->slot === 64537){
+								$this->player->dropItemNaturally($this->playerHeldItem);
+								$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
+							}else{
+								echo "";
+								echo "put $this->playerHeldItem into slot $packet->slot\n";
+								$this->playerHeldItem = $this->putItem($packet->windowID, $packet->slot, $this->playerHeldItem, $packet->button === 0);
+								echo "now, slot $packet->slot is ".$this->getItemBySlot($packet->windowID, $packet->slot)."\n";
+								echo "$this->playerHeldItem is remaining in hand\n";
+							}
+						}
+					break;
 
 					break;
 					default:
