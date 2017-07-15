@@ -614,12 +614,20 @@ class InventoryUtils{
 							if($packet->slot === 64537){
 								$this->player->dropItemNaturally($this->playerHeldItem);
 								$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
-							}else{
+							}elseif($this->playerHeldItem->equals($this->getItemBySlot($packet->windowID, $packet->slot))){
 								echo "";
 								echo "put $this->playerHeldItem into slot $packet->slot\n";
 								$this->playerHeldItem = $this->putItem($packet->windowID, $packet->slot, $this->playerHeldItem, $packet->button === 0);
 								echo "now, slot $packet->slot is ".$this->getItemBySlot($packet->windowID, $packet->slot)."\n";
 								echo "$this->playerHeldItem is remaining in hand\n";
+							}else{
+								//TODO check packet->item
+								$item = $this->getItemBySlot($packet->windowID, $packet->slot);
+
+								echo "swap $this->playerHeldItem with $item\n";
+								$this->setItemBySlot($packet->windowID, $packet->slot, $this->playerHeldItem);
+								echo "now, slot $packet->slot is $this->playerHeldItem\n";
+								$this->playerHeldItem = $item;
 							}
 						}
 					break;
