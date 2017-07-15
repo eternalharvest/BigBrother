@@ -471,9 +471,6 @@ class Translator{
 			case 0x1a: //HeldItemChangePacket
 				$slot = $player->getInventory()->getHotbarSlotIndex($packet->selectedSlot);
 				$item = $player->getInventory()->getItem($slot);
-				if($item->getId() === Item::AIR){
-					$slot = 246; //246 + 9 = 255
-				}
 
 				$pk = new MobEquipmentPacket();
 				$pk->entityRuntimeId = $player->getId();
