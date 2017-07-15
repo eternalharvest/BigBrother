@@ -88,6 +88,8 @@ class InventoryUtils{
 	}
 
 	protected function getItemBySlot(int $windowid, int $slot){
+		$inventory = null;
+
 		switch($windowid){
 			case ContainerSetContentPacket::SPECIAL_INVENTORY:
 				$realSlot = $slot;
@@ -112,23 +114,36 @@ class InventoryUtils{
 			break;
 		}
 
-		if($realSlot >= 0 and $realSlot < 5){
-			//TODO fix me
-			return $this->playerCraftSlot[$realSlot];
-		}elseif($realSlot >= 5 and $realSlot < 9){
-			return $this->player->getInventory()->getArmorItem($realSlot - 5);
-		}elseif($realSlot >= 9 and $realSlot < 36){
-			return $this->player->getInventory()->getItem($realSlot);
-		}elseif($realSlot >= 36 and $realSlot < 45){
-			return $this->player->getInventory()->getHotbarSlotItem($realSlot - 36);
+		if($inventory === null){
+			if($realSlot >= 0 and $realSlot < 5){
+				//TODO fix me
+				return $this->playerCraftSlot[$realSlot];
+			}elseif($realSlot >= 5 and $realSlot < 9){
+				return $this->player->getInventory()->getArmorItem($realSlot - 5);
+			}elseif($realSlot >= 9 and $realSlot < 36){
+				return $this->player->getInventory()->getItem($realSlot);
+			}elseif($realSlot >= 36 and $realSlot < 45){
+				return $this->player->getInventory()->getHotbarSlotItem($realSlot - 36);
+			}else{
+				echo "getItemBySlot() : invalid realSlot index $realSlot\n";
+			}
 		}else{
-			echo "getItemBySlot() : invalid realSlot index $realSlot\n";
+			$inventorySize = $this->player->getInventory()->getSize();
+			$hotbarSize = $this->player->getInventory()->getHotbarSize();
+
+			if($realSlot >= 0 and $realSlot < $inventorySize - $hotbarSize){
+				return $this->player->getInventory()->getItem($realSlot + $hotbarSize);
+			}elseif($realSlot >= $inventorySize - $hotbarSize and $realSlot < $inventorySize){
+				return $this->player->getInventory()->getHotbarSlotItem($realSlot - $inventorySize + $hotbarSize);
+			}
 		}
 
 		return null;
 	}
 
 	protected function setItemBySlot(int $windowid, int $slot, Item $item){
+		$inventory = null;
+
 		switch($windowid){
 			case ContainerSetContentPacket::SPECIAL_INVENTORY:
 				$realSlot = $slot;
@@ -144,7 +159,7 @@ class InventoryUtils{
 						return $inventory->setItem($slot, $item);
 					}else{
 						//Bottom Inventory (Player Inventory)
-						$realSlot = $slot - $nslot;
+						$realSlot = $slot - $nslots;
 					}
 				}else{
 					echo "unknown windowid: $windowid\n";
@@ -153,17 +168,29 @@ class InventoryUtils{
 			break;
 		}
 
-		if($realSlot >= 0 and $realSlot < 5){
-			$this->playerCraftSlot[$realSlot] = $item;
-		}elseif($realSlot >= 5 and $realSlot < 9){
-			//TODO check if item is armor instance
-			return $this->player->getInventory()->setArmorItem($realSlot - 5, $item);
-		}elseif($realSlot >= 9 and $realSlot < 36){
-			return $this->player->getInventory()->setItem($realSlot, $item);
-		}elseif($realSlot >= 36 and $realSlot < 45){
-			return $this->player->getInventory()->setHotbarSlotItem($realSlot - 36, $item);
+		echo "setItemBySlot($realSlot, $item);\n";
+		if($inventory === null){
+			if($realSlot >= 0 and $realSlot < 5){
+				$this->playerCraftSlot[$realSlot] = $item;
+			}elseif($realSlot >= 5 and $realSlot < 9){
+				//TODO check if item is armor instance
+				return $this->player->getInventory()->setArmorItem($realSlot - 5, $item);
+			}elseif($realSlot >= 9 and $realSlot < 36){
+				return $this->player->getInventory()->setItem($realSlot, $item);
+			}elseif($realSlot >= 36 and $realSlot < 45){
+				return $this->player->getInventory()->setHotbarSlotItem($realSlot - 36, $item);
+			}else{
+				echo "setItemBySlot() : invalid realSlot index $realSlot\n";
+			}
 		}else{
-			echo "setItemBySlot() : invalid realSlot index $realSlot\n";
+			$inventorySize = $this->player->getInventory()->getSize();
+			$hotbarSize = $this->player->getInventory()->getHotbarSize();
+
+			if($realSlot >= 0 and $realSlot < $inventorySize - $hotbarSize){
+				return $this->player->getInventory()->setHotbarSlotItem($realSlot + $hotbarSize, $item);
+			}elseif($realSlot >= $inventorySize - $hotbarSize and $realSlot < $inventorySize){
+				return $this->player->getInventory()->setItem($realSlot - $inventorySize + $hotbarSize, $item);
+			}
 		}
 
 		return false;
