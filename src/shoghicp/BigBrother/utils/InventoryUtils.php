@@ -87,7 +87,139 @@ class InventoryUtils{
 		return $items;
 	}
 
+	protected function getItemBySlot(int $windowid, int $slot){
+		switch($windowid){
+			case ContainerSetContentPacket::SPECIAL_INVENTORY:
+				$realSlot = $slot;
+			break;
 
+			default:
+				if(isset($this->windowInfo[$windowid])){
+					$type = $this->windowInfo[$windowid]['type'];
+					$nslots = $this->windowInfo[$windowid]['slots'];
+					$inventory = $this->windowInfo[$windowid]['inventory'];
+
+					if($slot < $nslots){
+						return $inventory->getItem($slot);
+					}else{
+						//Bottom Inventory (Player Inventory)
+						$realSlot = $slot - $nslots;
+					}
+				}else{
+					echo "unknown windowid: $windowid\n";
+					return null;
+				}
+			break;
+		}
+
+		if($realSlot >= 0 and $realSlot < 5){
+			//TODO fix me
+			return $this->playerCraftSlot[$realSlot];
+		}elseif($realSlot >= 5 and $realSlot < 9){
+			return $this->player->getInventory()->getArmorItem($realSlot - 5);
+		}elseif($realSlot >= 9 and $realSlot < 36){
+			return $this->player->getInventory()->getItem($realSlot);
+		}elseif($realSlot >= 36 and $realSlot < 45){
+			return $this->player->getInventory()->getHotbarSlotItem($realSlot - 36);
+		}else{
+			echo "getItemBySlot() : invalid realSlot index $realSlot\n";
+		}
+
+		return null;
+	}
+
+	protected function setItemBySlot(int $windowid, int $slot, Item $item){
+		switch($windowid){
+			case ContainerSetContentPacket::SPECIAL_INVENTORY:
+				$realSlot = $slot;
+			break;
+
+			default:
+				if(isset($this->windowInfo[$windowid])){
+					$type = $this->windowInfo[$windowid]['type'];
+					$nslots = $this->windowInfo[$windowid]['slots'];
+					$inventory = $this->windowInfo[$windowid]['inventory'];
+
+					if($slot < $nslots){
+						return $inventory->setItem($slot, $item);
+					}else{
+						//Bottom Inventory (Player Inventory)
+						$realSlot = $slot - $nslot;
+					}
+				}else{
+					echo "unknown windowid: $windowid\n";
+					return false;
+				}
+			break;
+		}
+
+		if($realSlot >= 0 and $realSlot < 5){
+			$this->playerCraftSlot[$realSlot] = $item;
+		}elseif($realSlot >= 5 and $realSlot < 9){
+			//TODO check if item is armor instance
+			return $this->player->getInventory()->setArmorItem($realSlot - 5, $item);
+		}elseif($realSlot >= 9 and $realSlot < 36){
+			return $this->player->getInventory()->setItem($realSlot, $item);
+		}elseif($realSlot >= 36 and $realSlot < 45){
+			return $this->player->getInventory()->setHotbarSlotItem($realSlot - 36, $item);
+		}else{
+			echo "setItemBySlot() : invalid realSlot index $realSlot\n";
+		}
+
+		return false;
+	}
+
+	protected function pickItem(int $windowid, int $slot, bool $whole=true){
+		$target = $this->getItemBySlot($windowid, $slot);
+		$picked = Item::get(Item::AIR, 0, 0);
+
+		if($target !== null and $target->getId() !== Item::AIR and $target->getCount() > 0){
+			if($whole){
+				$picked = $target;
+				$target = Item::get(Item::AIR, 0, 0);
+			}else{
+				$picked = clone $target;
+				$picked->setCount((int)ceil($target->getCount()/2));
+				$target->setCount((int)floor($target->getCount()/2));
+			}
+		}
+
+		//TODO check whether if this method success
+		if($target !== null){
+			$this->setItemBySlot($windowid, $slot, $target);
+		}
+
+		return $picked;
+	}
+
+	protected function putItem(int $windowid, int $slot, Item $item, bool $whole=true){
+		$target = $this->getItemBySlot($windowid, $slot);
+		$remain = Item::get(Item::AIR, 0, 0);
+		$amount = $whole ? $item->getCount() : 1;
+
+		if($target === null or $target->getId() === Item::AIR or $target->getCount() === 0){
+			$target = $item;
+		}elseif($target->equals($item)){
+			if($target->getCount() + $amount > $item->getMaxStackSize()){
+				$remain = clone $target;
+				$remain->setCount($target->getCount() + $amount - $item->getMaxStackSize());
+				$target->setCount($item->getMaxStackSize());
+			}else{
+				$target->setCount($target->getCount() + $amount);
+				if($whole !== true){
+					$remain = clone $target;
+					$remain->setCount($remain->getCount() - $amount);
+				}
+			}
+		}
+
+		//TODO check whether if this method success
+		if($target !== null){
+			$this->setItemBySlot($windowid, $slot, $target);
+		}
+
+		return $remain;
+	}
 
 	public function onWindowOpen($packet){
 		$type = "";
@@ -116,13 +248,15 @@ class InventoryUtils{
 		}
 
 		$slots = 9;
+		$inventory = null;
 		if(($tile = $this->player->getLevel()->getTile(new Vector3($packet->x, $packet->y, $packet->z))) instanceof Tile){
 			if($tile instanceof TileEnderChest){
-				$slots = $this->player->getEnderChestInventory()->getSize();
+				$inventory = $this->player->getEnderChestInventory();
 				$title = "Ender Chest";
 			}else{
-				$slots = $tile->getInventory()->getSize();
+				$inventory = $tile->getInventory();
 			}
+			$slots = $inventory->getSize();
 		}
 
 		$pk = new OpenWindowPacket();
@@ -131,7 +265,7 @@ class InventoryUtils{
 		$pk->windowTitle = BigBrother::toJSON($title);
 		$pk->slots = $slots;
 
-		$this->windowInfo[$packet->windowid] = ["type" => $packet->type, "slots" => $slots];
+		$this->windowInfo[$packet->windowid] = ["type" => $packet->type, "slots" => $slots, "inventory" => $inventory];
 
 		return $pk;
 	}
