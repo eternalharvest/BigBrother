@@ -597,6 +597,10 @@ class InventoryUtils{
 
 		$accepted = false;
 
+		//$item = ;
+		//$heldItem = ;
+		echo "click: $packet->mode, $packet->button; slot: $packet->slot\n";
+
 		switch($packet->mode){
 			case 0:
 				switch($packet->button){
@@ -608,27 +612,20 @@ class InventoryUtils{
 					case 1://Right mouse click
 						$accepted = true;
 
-						if($this->playerHeldItem->getId() === Item::AIR){
-							if($item->getCount() % 2 === 0){
-								$this->playerHeldItem = clone $item;
-								$this->playerHeldItem->setCount($item->getCount() / 2);
-
-								$item->setCount($item->getCount() / 2);
-							}else{
-								$item->setCount($item->getCount() / 2);
-								$this->playerHeldItem->setCount((($item->getCount() - 1) / 2) + 1);
-							}
+						if($this->playerHeldItem === null || $this->playerHeldItem->getId() === Item::AIR || $this->playerHeldItem->getCount() === 0){
+							$this->playerHeldItem = $this->pickItem($packet->windowID, $packet->slot, $packet->button === 0);
+							echo "";
+							echo "pick $this->playerHeldItem from slot $packet->slot\n";
 						}else{
-							if($item->getId() === Item::AIR){
-								$item = clone $this->playerHeldItem;
-								$item->setCount(1);
-
-								$this->playerHeldItem->setCount($this->playerHeldItem->getCount() - 1);
+							if($packet->slot === 64537){
+								$this->player->dropItemNaturally($this->playerHeldItem);
+								$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
 							}else{
-								$item = clone $this->playerHeldItem;
-								$item->setCount($item->getCount() + 1);
-
-								$this->playerHeldItem->setCount($this->playerHeldItem->getCount() - 1);
+								echo "";
+								echo "put $this->playerHeldItem into slot $packet->slot\n";
+								$this->playerHeldItem = $this->putItem($packet->windowID, $packet->slot, $this->playerHeldItem, $packet->button === 0);
+								echo "now, slot $packet->slot is ".$this->getItemBySlot($packet->windowID, $packet->slot)."\n";
+								echo "$this->playerHeldItem is remaining in hand\n";
 							}
 						}
 					break;
