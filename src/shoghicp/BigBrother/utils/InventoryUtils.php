@@ -122,6 +122,34 @@ class InventoryUtils{
 		return $items;
 	}
 
+	protected function translateSlotToReal(int $windowid, int $slot, &$inventory=null) : int{
+		$realSlot = -1;
+
+		switch($windowid){
+			case ContainerIds::INVENTORY:
+				$realSlot = $slot;
+				$inventory = null;
+			break;
+
+			default:
+				if(isset($this->windowInfo[$windowid])){
+					$nslots = $this->windowInfo[$windowid]['slots'];
+					$inventory = $this->windowInfo[$windowid]['inventory'];
+
+					if($slot >= $nslots){
+						$realSlot = $slot - $nslots;
+					}else{
+						$realSlot = $slot;
+					}
+				}else{
+					echo "unknown windowid: $windowid\n";
+				}
+			break;
+		}
+
+		return $realSlot;
+	}
+
 	protected function getSlotType(int $windowid, int $slot) : int{
 		$inventory = null;
 		$nslots = 0;
