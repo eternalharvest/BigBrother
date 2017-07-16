@@ -373,27 +373,22 @@ class InventoryUtils{
 					$pk->items[] = Item::get(Item::AIR, 0, 0);//Armor
 				}
 
-				$hotbar = [];
-				foreach($packet->hotbar as $num => $hotbarslot){
-					if($hotbarslot === -1){
-						$packet->hotbar[$num] = $hotbarslot = $num + $this->player->getInventory()->getHotbarSize();
-					}
+				//TODO consider $packet->slots. is it ok to ignore it??
 
-					$hotbarslot -= $this->player->getInventory()->getHotbarSize();
-					$hotbar[] = $packet->slots[$hotbarslot];
-				}
-
+				// Inventory
 				$inventory = [];
-				for($i = 0; $i < $this->player->getInventory()->getSize(); $i++){
-					$hotbarslot = $i + $this->player->getInventory()->getHotbarSize();
-					if(!in_array($hotbarslot, $packet->hotbar)){
-						$pk->items[] = $packet->slots[$i];
-						$inventory[] = $packet->slots[$i];
-					}
+				for($i = 0; $i < $this->player->getInventory()->getSize() - $this->player->getInventory()->getHotbarSize(); ++$i){
+					$item = $this->player->getInventory()->getItem($i + 9);
+					$pk->items[] = $item;
+					$inventory[] = $item;
 				}
 
-				foreach($hotbar as $item){
-					$pk->items[] = $item;//hotbar
+				// Hotbar
+				$hotbar = [];
+				for($i = 0; $i < $this->player->getInventory()->getHotbarSize(); ++$i){
+					$item = $this->player->getInventory()->getHotbarSlotItem($i);
+					$pk->items[] = $item;
+					$hotbar = $item;
 				}
 
 				$pk->items[] = Item::get(Item::AIR, 0, 0);//offhand
@@ -429,8 +424,15 @@ class InventoryUtils{
 
 					$pk->items = $packet->slots;
 
-					$pk->items = $this->getInventory($pk->items);
-					$pk->items = $this->getHotbar($pk->items);
+					// Inventory
+					for($i = 0; $i < $this->player->getInventory()->getSize() - $this->player->getInventory()->getHotbarSize(); ++$i){
+						$pk->items[] = $this->player->getInventory()->getItem($i + 9);
+					}
+
+					// Hotbar
+					for($i = 0; $i < $this->player->getInventory()->getHotbarSize(); ++$i){
+						$pk->items[] = $this->player->getInventory()->getHotbarSlotItem($i);
+					}
 
 					return $pk;
 				}
