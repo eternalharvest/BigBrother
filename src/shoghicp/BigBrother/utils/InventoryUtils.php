@@ -38,12 +38,16 @@ use pocketmine\network\mcpe\protocol\ContainerSetDataPacket;
 use pocketmine\network\mcpe\protocol\TakeItemEntityPacket;
 use pocketmine\network\mcpe\protocol\types\ContainerIds;
 use pocketmine\network\mcpe\protocol\types\WindowTypes;
+use pocketmine\inventory\SlotType;
+use pocketmine\inventory\FurnaceInventory;
+use pocketmine\inventory\CraftingInventory;
 
 use pocketmine\entity\Item as ItemEntity;
 use pocketmine\math\Vector3;
 use pocketmine\tile\Tile;
 use pocketmine\tile\EnderChest as TileEnderChest;
 use pocketmine\item\Item;
+use pocketmine\item\Armor;
 use pocketmine\inventory\InventoryHolder;
 
 use shoghicp\BigBrother\BigBrother;
@@ -118,11 +122,174 @@ class InventoryUtils{
 		return $items;
 	}
 
+	protected function getSlotType(int $windowid, int $slot) : int{
+		$inventory = null;
+		$nslots = 0;
+		$type = -1;
+
+		switch($windowid){
+			case ContainerIds::INVENTORY:
+				$realSlot = $slot;
+			break;
+
+			default:
+				if(isset($this->windowInfo[$windowid])){
+					$nslots = $this->windowInfo[$windowid]['slots'];
+					$inventory = $this->windowInfo[$windowid]['inventory'];
+
+					if($slot >= $nslots){
+						$realSlot = $slot - $nslots;
+					}
+				}else{
+					echo "unknown windowid: $windowid\n";
+					$realSlot = -1;
+				}
+			break;
+		}
+
+		if($inventory === null){
+			if($realSlot === 0){
+				$type = SlotType::RESULT;
+			}elseif($realSlot > 0 and $realSlot < 5){
+				$type = SlotType::CRAFTING;
+			}elseif($realSlot >= 5 and $realSlot < 9){
+				$type = SlotType::ARMOR;
+			}elseif($realSlot >= 9 and $realSlot < 36){
+				$type = SlotType::HOTBAR;
+			}elseif($realSlot >= 36 and $realSlot < 45){
+				$type = SlotType::CONTAINER;
+			}
+		}elseif($slot >= $nslots){
+			if($realSlot >= 0 and $realSlot < 27){
+				$type = SlotType::HOTBAR;
+			}elseif($realSlot >= 27 and $realSlot < 36){
+				$type = SlotType::CONTAINER;
+			}
+		}else{
+			if($inventory instanceof FurnaceInventory){
+				switch($slot){
+					case 1:
+						$type = SlotType::FUEL;
+					break;
+
+					case 2:
+						$type = SlotType::RESULT;
+					break;
+				}
+			}elseif($inventory instanceof CraftingInventory){
+				switch($slot){
+					case 0:
+						$type = SlotType::RESULT;
+					break;
+
+					default:
+						$type = SlotType::CRAFTING;
+					break;
+				}
+			}
+		}
+
+		return $type;
+	}
+
+	protected function canSetItem(int $windowid, int $slot, Item $item) : bool{
+		$canput = false;
+
+		switch($slotType = $this->getSlotType($windowid, $slot)){
+			case SlotType::RESULT:
+			break;
+
+			case SlotType::CRAFTING:
+			case SlotType::HOTBAR:
+			case SlotType::CONTAINER:
+				$canput = true;
+			break;
+
+			case SlotType::ARMOR:
+				if($item instanceof Armor){
+					switch($item->getId()){
+						case Item::CHAIN_HELMET:
+						case Item::IRON_HELMET:
+						case Item::DIAMOND_HELMET:
+						case Item::GOLDEN_HELMET:
+							$canput = $slot === 5;
+						break;
+
+						case Item::CHAIN_CHESTPLATE:
+						case Item::IRON_CHESTPLATE:
+						case Item::DIAMOND_CHESTPLATE:
+						case Item::GOLDEN_CHESTPLATE:
+							$canput = $slot === 6;
+						break;
+
+						case Item::CHAIN_LEGGINGS:
+						case Item::IRON_LEGGINGS:
+						case Item::DIAMOND_LEGGINGS:
+						case Item::GOLDEN_LEGGINGS:
+							$canput = $slot === 7;
+						break;
+
+						case Item::CHAIN_BOOTS:
+						case Item::IRON_BOOTS:
+						case Item::DIAMOND_BOOTS:
+						case Item::GOLDEN_BOOTS:
+							$canput = $slot === 8;
+						break;
+
+						default:
+							echo "unknown armor $item\n";
+						break;
+					}
+				}
+			break;
+
+			case SlotType::FUEL:
+				switch($item->getId()){
+					case Item::COAL:
+					case Item::COAL_BLOCK:
+					case Item::TRUNK:
+					case Item::WOODEN_PLANKS:
+					case Item::SAPLING:
+					case Item::WOODEN_AXE:
+					case Item::WOODEN_PICKAXE:
+					case Item::WOODEN_SWORD:
+					case Item::WOODEN_SHOVEL:
+					case Item::WOODEN_HOE:
+					case Item::STICK:
+					case Item::FENCE:
+					case Item::FENCE_GATE:
+					case Item::FENCE_GATE_SPRUCE:
+					case Item::FENCE_GATE_BIRCH:
+					case Item::FENCE_GATE_JUNGLE:
+					case Item::FENCE_GATE_ACACIA:
+					case Item::FENCE_GATE_DARK_OAK:
+					case Item::WOODEN_STAIRS:
+					case Item::SPRUCE_WOOD_STAIRS:
+					case Item::BIRCH_WOOD_STAIRS:
+					case Item::JUNGLE_WOOD_STAIRS:
+					case Item::TRAPDOOR:
+					case Item::WORKBENCH:
+					case Item::BOOKSHELF:
+					case Item::CHEST:
+					case Item::BUCKET:
+						$canput = true;
+					break;
+				}
+			break;
+
+			default:
+				echo "unknown slot type $slotType\n";
+			break;
+		}
+
+		return $canput;
+	}
+
 	protected function getItemBySlot(int $windowid, int $slot){
 		$inventory = null;
 
 		switch($windowid){
-			case ContainerSetContentPacket::SPECIAL_INVENTORY:
+			case ContainerIds::INVENTORY:
 				$realSlot = $slot;
 			break;
 
@@ -176,7 +343,7 @@ class InventoryUtils{
 		$inventory = null;
 
 		switch($windowid){
-			case ContainerSetContentPacket::SPECIAL_INVENTORY:
+			case ContainerIds::INVENTORY:
 				$realSlot = $slot;
 			break;
 
