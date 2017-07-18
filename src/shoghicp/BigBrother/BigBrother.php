@@ -34,6 +34,7 @@ use pocketmine\network\mcpe\protocol\ProtocolInfo as Info;
 use pocketmine\block\Block;
 use pocketmine\block\Chest;
 use pocketmine\event\player\PlayerRespawnEvent;
+use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\Listener;
 use pocketmine\utils\TextFormat;
@@ -44,6 +45,8 @@ use shoghicp\BigBrother\network\ProtocolInterface;
 use shoghicp\BigBrother\network\Translator;
 use shoghicp\BigBrother\network\protocol\Play\Server\RespawnPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\OpenSignEditorPacket;
+use shoghicp\BigBrother\network\protocol\Play\Server\PlayerPositionAndLookPacket;
+use shoghicp\BigBrother\inventory\CraftingInventory;
 use shoghicp\BigBrother\utils\ConvertUtils;
 use shoghicp\BigBrother\utils\AES;
 
@@ -276,6 +279,24 @@ class BigBrother extends PluginBase implements Listener{
 			}
 			if($num_side_chest > 1){//Cancel if there are more than one chest that can be large-chest
 				$event->setCancelled();
+			}
+		}
+	}
+
+	/**
+	 * @param PlayerInteractEvent $event
+	 *
+	 * @priority NORMAL
+	 */
+	public function onInteract(PlayerInteractEvent $event){
+		$player = $event->getPlayer();
+		$block = $event->getBlock();
+
+		if($event->getAction() === PlayerInteractEvent::RIGHT_CLICK_BLOCK and $player instanceof DesktopPlayer){
+			switch($block->getId()){
+				case Block::WORKBENCH:
+					$player->addWindow(new CraftingInventory($player));
+				break;
 			}
 		}
 	}
