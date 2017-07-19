@@ -47,6 +47,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\RespawnPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\OpenSignEditorPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\PlayerPositionAndLookPacket;
 use shoghicp\BigBrother\inventory\CraftingInventory;
+use shoghicp\BigBrother\inventory\BrewingStandInventory;
 use shoghicp\BigBrother\utils\ConvertUtils;
 use shoghicp\BigBrother\utils\AES;
 
@@ -296,6 +297,10 @@ class BigBrother extends PluginBase implements Listener{
 			switch($block->getId()){
 				case Block::WORKBENCH:
 					$player->addWindow(new CraftingInventory($player));
+				break;
+
+				case Block::BREWING_STAND_BLOCK:
+					$player->addWindow(new BrewingStandInventory($player));
 				break;
 			}
 		}
