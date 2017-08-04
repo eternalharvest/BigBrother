@@ -112,6 +112,8 @@ class Translator{
 	 * @param DesktopPlayer $player
 	 * @param Packet        $packet
 	 * @return DataPacket|array<DataPacket>|null
+	 *
+	 * @suppress PhanUndeclaredProperty
 	 */
 	public function interfaceToServer(DesktopPlayer $player, Packet $packet){
 		switch($packet->pid()){
@@ -649,6 +651,8 @@ class Translator{
 	 * @param DesktopPlayer $player
 	 * @param DataPacket    $packet
 	 * @return Packet|array<Packet>|null
+	 *
+	 * @suppress PhanUndeclaredProperty
 	 */
 	public function serverToInterface(DesktopPlayer $player, DataPacket $packet){
 		switch($packet->pid()){
