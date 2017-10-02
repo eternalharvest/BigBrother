@@ -37,6 +37,9 @@ use shoghicp\BigBrother\utils\ComputerItem;
 
 abstract class Packet extends \stdClass{
 
+	const MASK_PID      = 0x00ff;
+	const MASK_STATE    = 0xff00;
+
 	/** @var string */
 	protected $buffer;
 	/** @var int */
@@ -207,7 +210,15 @@ abstract class Packet extends \stdClass{
 		$this->buffer .= Binary::writeComputerVarInt($v);
 	}
 
-	public abstract function pid() : int;
+	public final static function pid() : int{
+		return static::canonical() & self::MASK_PID;
+	}
+
+	public final static function state() : int{
+		return (static::canonical() & self::MASK_STATE) >> 8;
+	}
+
+	protected abstract static function canonical() : int;
 
 	protected abstract function encode() : void;
 

@@ -125,7 +125,7 @@ class Translator{
 	 * @return DataPacket|array<DataPacket>|null
 	 */
 	public function interfaceToServer(DesktopPlayer $player, Packet $packet){
-		switch($packet->pid()){
+		switch($packet->canonical()){
 			case InboundPacket::TELEPORT_CONFIRM_PACKET://Confirm
 				return null;
 
