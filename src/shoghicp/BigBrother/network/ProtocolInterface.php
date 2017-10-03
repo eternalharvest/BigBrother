@@ -146,10 +146,9 @@ class ProtocolInterface implements SourceInterface{
 	 * @param Packet $packet
 	 */
 	protected function sendPacket(int $target, Packet $packet){
-		if(\pocketmine\DEBUG > 3){
-			$id = bin2hex(chr($packet->pid()));
-			if($id !== "1f"){
-				echo "[Send][Interface] 0x".bin2hex(chr($packet->pid()))."\n";
+		if(\pocketmine\DEBUG > 4){
+			if($packet->canonical() === OutboundPacket::KEEP_ALIVE_PACKET){
+				$this->plugin->getLogger()->debug(sprintf("[Send][Interface] %s", $packet));
 			}
 		}
 
@@ -244,35 +243,39 @@ class ProtocolInterface implements SourceInterface{
 	 * @param string        $payload
 	 */
 	protected function handlePacket(DesktopPlayer $player, string $payload){
-		if(\pocketmine\DEBUG > 3){
-			$id = bin2hex(chr(ord($payload{0})));
-			if($id !== "0b"){//KeepAlivePacket
-				echo "[Receive][Interface] 0x".bin2hex(chr(ord($payload{0})))."\n";
-			}
-		}
-
 		$pid = ord($payload{0});
 		$offset = 1;
 
 		$status = $player->bigBrother_getStatus();
 		$pk = Packet::newInboundPacket($pid, $status, $payload, $offset);
 
-		if($status === 1){
+		if(\pocketmine\DEBUG > 3){
 			if($pk === null){
-				if(\pocketmine\DEBUG > 3){
-					echo "[Receive][Interface] 0x".bin2hex(chr($pid))." Not implemented\n"; //Debug
-				}
-				return;
+				$this->plugin->getLogger()->debug(sprintf("[Recv][Interface] status=0x%02x; pid=0x%02x Not implemented", $status, $pid)); //Debug
 			}
+		}
 
+		if(\pocketmine\DEBUG > 4){
+			if($pk !== null and $pk->canonical() === InboundPacket::KEEP_ALIVE_PACKET){
+				$this->plugin->getLogger()->debug(sprintf("[Recv][Interface] %s", $pk));
+			}
+		}
+
+		if($status === 1){
 			$this->receivePacket($player, $pk);
 		}elseif($status === 0){
-			if($pid === InboundPacket::LOGIN_START_PACKET){
-				$player->bigBrother_handleAuthentication($this->plugin, $pk->name, $this->plugin->isOnlineMode());
-			}elseif($pid === InboundPacket::ENCRYPTION_RESPONSE_PACKET and $this->plugin->isOnlineMode()){
-				$player->bigBrother_processAuthentication($this->plugin, $pk);
-			}else{
-				$player->close($player->getLeaveMessage(), "Unexpected packet $pid");
+			switch($pk->canonical()){
+				case InboundPacket::LOGIN_START_PACKET:
+					$player->bigBrother_handleAuthentication($this->plugin, $pk->name, $this->plugin->isOnlineMode());
+				break;
+				case InboundPacket::ENCRYPTION_RESPONSE_PACKET:
+					if($this->plugin->isOnlineMode()){
+						$player->bigBrother_processAuthentication($this->plugin, $pk);
+						break;
+					}
+				default:
+					$player->close($player->getLeaveMessage(), sprintf("Unexpected packet 0x%02x", $pid));
+				break;
 			}
 		}
 	}

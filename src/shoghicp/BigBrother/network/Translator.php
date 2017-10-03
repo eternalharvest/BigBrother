@@ -629,7 +629,7 @@ class Translator{
 
 			default:
 				if(\pocketmine\DEBUG > 3){
-					echo "[Receive][Translator] 0x".bin2hex(chr($packet->pid()))." Not implemented\n";
+					$player->getServer()->getLogger()->debug(sprintf("[Recv][Translator] %s Not implemented", $packet));
 				}
 				return null;
 		}
@@ -1715,7 +1715,7 @@ class Translator{
 
 			case Info::INVENTORY_SLOT_PACKET:
 				return $player->getInventoryUtils()->onWindowSetSlot($packet);
-			
+
 			case Info::CONTAINER_SET_DATA_PACKET:
 				return $player->getInventoryUtils()->onWindowSetData($packet);
 
@@ -2001,7 +2001,7 @@ class Translator{
 
 			default:
 				if(\pocketmine\DEBUG > 3){
-					echo "[Send][Translator] 0x".bin2hex(chr($packet->pid()))." Not implemented\n";
+					$player->getServer()->getLogger()->debug(sprintf("[Send][Translator] %s Not implemented\n", $packet));
 				}
 				return null;
 		}
