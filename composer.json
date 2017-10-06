@@ -43,9 +43,53 @@
 		"ext-phar": "*",
 		"ext-json": "*"
 	},
+	"require-dev": {
+		"phan/phan": "^0.8.6",
+		"pmmp/pocketmine-mp": "dev-master",
+		"pmmp/raklib": "dev-master",
+		"pmmp/spl": "dev-master"
+	},
 	"autoload": {
 		"psr-0": {
 			"shoghicp\\BigBrother\\": ["src"]
 		}
-	}
+	},
+	"repositories": [
+		{
+			"type": "package",
+			"package": {
+				"name": "pmmp/pocketmine-mp",
+				"version": "master",
+				"source": {
+					"url": "https://github.com/pmmp/PocketMine-MP",
+					"type": "git",
+					"reference": "master"
+				}
+			}
+		},
+		{
+			"type": "package",
+			"package": {
+				"name": "pmmp/raklib",
+				"version": "master",
+				"source": {
+					"url": "https://github.com/pmmp/RakLib",
+					"type": "git",
+					"reference": "master"
+				}
+			}
+		},
+		{
+			"type": "package",
+			"package": {
+				"name": "pmmp/spl",
+				"version": "master",
+				"source": {
+					"url": "https://github.com/pmmp/PocketMine-SPL",
+					"type": "git",
+					"reference": "master"
+				}
+			}
+		}
+	]
 }
