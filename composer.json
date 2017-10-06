@@ -31,13 +31,35 @@
 			"role": "Developper"
 		}
 	],
+	"scripts": {
+		"build": [
+			"@composer install",
+			"mkdir -p dist",
+			"@php -dphar.readonly=0 vendor/pmmp/devtools/src/DevTools/ConsoleScript.php --make . --out dist/BigBrother.phar"
+		]
+	},
 	"require": {
 		"php": ">=7.1",
-		"phpseclib/phpseclib": "2.0.6"
+		"phpseclib/phpseclib": "2.0.6",
+		"pmmp/devtools": "dev-master"
 	},
 	"autoload": {
 		"psr-0": {
 			"shoghicp\\BigBrother\\": ["src"]
 		}
-	}
+	},
+	"repositories": [
+		{
+			"type": "package",
+			"package": {
+				"name": "pmmp/devtools",
+				"version": "master",
+				"source": {
+					"url": "https://github.com/pmmp/PocketMine-DevTools",
+					"type": "git",
+					"reference": "master"
+				}
+			}
+		}
+	]
 }

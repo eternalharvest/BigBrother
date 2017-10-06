@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d35129371751f01893832613073ff84",
+    "content-hash": "3069736c861879d5b28632360b77198b",
     "packages": [
         {
             "name": "phpseclib/phpseclib",
@@ -97,12 +97,25 @@
                 "x509"
             ],
             "time": "2017-06-05T06:31:10+00:00"
+        },
+        {
+            "name": "pmmp/devtools",
+            "version": "master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pmmp/PocketMine-DevTools",
+                "reference": "master"
+            },
+            "type": "library",
+            "time": "2017-09-28T10:43:14+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "pmmp/devtools": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
