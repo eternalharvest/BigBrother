@@ -47,7 +47,16 @@ use shoghicp\BigBrother\network\protocol\Play\Server\OpenSignEditorPacket;
 use shoghicp\BigBrother\utils\ConvertUtils;
 use shoghicp\BigBrother\utils\AES;
 
+if(\Phar::running(true) !== ""){
+	define("shoghicp\BigBrother\PATH", \Phar::running(true) . "/");
+}else{
+	define("shoghicp\BigBrother\PATH", dirname(__FILE__, 4) . DIRECTORY_SEPARATOR);
+}
+
 class BigBrother extends PluginBase implements Listener{
+
+	/** @var \Composer\Autoload\ClassLoader */
+	private $loader;
 
 	/** @var ProtocolInterface */
 	private $interface;
@@ -84,6 +93,16 @@ class BigBrother extends PluginBase implements Listener{
 		$this->reloadConfig();
 
 		$this->onlineMode = (bool) $this->getConfig()->get("online-mode");
+
+		if(is_file(\shoghicp\BigBrother\PATH . "/vendor/autoload.php")){
+			$this->getLogger()->info("registering Composer autoloader...");
+			$this->loader = require(\shoghicp\BigBrother\PATH . "/vendor/autoload.php");
+		}else{
+			$this->getLogger()->critical("Composer autoloader not found");
+			$this->getLogger()->critical("Please initialize composer dependencies before running");
+			$this->getPluginLoader()->disablePlugin($this);
+			return;
+		}
 
 		$aes = new AES();
 		switch($aes->getEngine()){
@@ -147,6 +166,16 @@ class BigBrother extends PluginBase implements Listener{
 		}else{
 			$this->getLogger()->critical("Couldn't find a protocol translator for #".Info::CURRENT_PROTOCOL .", disabling plugin");
 			$this->getPluginLoader()->disablePlugin($this);
+		}
+	}
+
+	/**
+	 * @override
+	 */
+	public function onDisable(){
+		if($this->loader !== null){
+			$this->getLogger()->info("registering Composer autoloader...");
+			$this->loader->unregister();
 		}
 	}
 
