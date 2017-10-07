@@ -31,9 +31,17 @@
 			"role": "Developper"
 		}
 	],
+	"scripts": {
+		"build": [
+			"@composer install --no-dev -o",
+			"@php contrib/build"
+		]
+	},
 	"require": {
 		"php": ">=7.1",
-		"phpseclib/phpseclib": "2.0.6"
+		"phpseclib/phpseclib": "2.0.6",
+		"ext-phar": "*",
+		"ext-json": "*"
 	},
 	"autoload": {
 		"psr-0": {
