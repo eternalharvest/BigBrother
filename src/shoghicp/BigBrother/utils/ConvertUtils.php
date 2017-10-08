@@ -585,7 +585,7 @@ class ConvertUtils{
 						$newdata[3] = [6, true];
 					}
 
-					if(((int) $d[1] & (1 <<  Human::DATA_FLAG_IMMOBILE)) > 0){
+					if(((int) $d[1] & (1 <<  Human::DATA_FLAG_IMMOBILE)) > 0){//TODO
 						//$newdata[11] = [0, true];
 					}
 
