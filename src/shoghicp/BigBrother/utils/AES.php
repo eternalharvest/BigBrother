@@ -53,6 +53,8 @@ class AES extends Rijndael{
 
 	/**
 	 * TODO this method overrides private Base::_setupMcrypt() method
+	 * @suppress PhanDeprecatedFunctionInternal
+	 * @suppress PhanAccessMethodInternal
 	 * @override
 	 */
 	function _setupMcrypt(){
@@ -76,6 +78,7 @@ class AES extends Rijndael{
 	/**
 	 * TODO this method override private Base::_openssl_translate_mode()
 	 * @return string
+	 * @suppress PhanAccessMethodInternal
 	 * @override
 	 */
 	function _openssl_translate_mode(){
@@ -92,6 +95,7 @@ class AES extends Rijndael{
 	 * @param array $cipher_code
 	 * @return string
 	 * @override
+	 * @suppress PhanDeprecatedFunctionInternal
 	 */
 	public function _createInlineCryptFunction($cipher_code){
 		$inline = null;
@@ -165,6 +169,7 @@ class AES extends Rijndael{
 	 * TODO this method override internal Base::encrypt() method
 	 * @param string $plain text to encrypt
 	 * @return string encrypted text
+	 * @suppress PhanAccessMethodInternal
 	 * @override
 	 */
 	public function encrypt($plain){
@@ -234,6 +239,7 @@ class AES extends Rijndael{
 	 * TODO this method override internal Base::decrypt() method
 	 * @param string $cipher text to decrypt
 	 * @return string decrypted text
+	 * @suppress PhanAccessMethodInternal
 	 * @override
 	 */
 	public function decrypt($cipher){

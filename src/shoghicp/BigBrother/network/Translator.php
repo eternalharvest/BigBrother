@@ -53,6 +53,11 @@ use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\MobEffectPacket;
+use pocketmine\network\mcpe\protocol\ContainerOpenPacket;
+use pocketmine\network\mcpe\protocol\ContainerClosePacket;
+use pocketmine\network\mcpe\protocol\ContainerSetSlotPacket;
+use pocketmine\network\mcpe\protocol\ContainerSetContentPacket;
+use pocketmine\network\mcpe\protocol\TakeItemEntityPacket;
 use pocketmine\utils\TextFormat;
 use pocketmine\utils\UUID;
 use pocketmine\nbt\NBT;
@@ -105,6 +110,9 @@ use shoghicp\BigBrother\network\protocol\Play\Server\UpdateHealthPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\UpdateBlockEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\UseBedPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\NamedSoundEffectPacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\ClickWindowPacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\CloseWindowPacket;
+use shoghicp\BigBrother\utils\Binary;
 use shoghicp\BigBrother\utils\ConvertUtils;
 
 class Translator{
@@ -113,6 +121,8 @@ class Translator{
 	 * @param DesktopPlayer $player
 	 * @param Packet        $packet
 	 * @return DataPacket|array<DataPacket>|null
+	 *
+	 * @suppress PhanUndeclaredProperty
 	 */
 	public function interfaceToServer(DesktopPlayer $player, Packet $packet){
 		switch($packet->pid()){
@@ -173,11 +183,11 @@ class Translator{
 				return null;
 
 			case InboundPacket::CLICK_WINDOW_PACKET:
-				$pk = $player->getInventoryUtils()->onWindowClick($packet);
-
-				return $pk;
+				assert($packet instanceof ClickWindowPacket);
+				return $player->getInventoryUtils()->onWindowClick($packet);
 
 			case InboundPacket::CLOSE_WINDOW_PACKET:
+				assert($packet instanceof CloseWindowPacket);
 				$pk = $player->getInventoryUtils()->onWindowCloseFromPCtoPE($packet);
 
 				return $pk;
@@ -654,6 +664,8 @@ class Translator{
 	 * @param DesktopPlayer $player
 	 * @param DataPacket    $packet
 	 * @return Packet|array<Packet>|null
+	 *
+	 * @suppress PhanUndeclaredProperty
 	 */
 	public function serverToInterface(DesktopPlayer $player, DataPacket $packet){
 		switch($packet->pid()){
@@ -1108,12 +1120,10 @@ class Translator{
 				return $packets;
 
 			case Info::TAKE_ITEM_ENTITY_PACKET:
+				assert($packet instanceof TakeItemEntityPacket);
 				$packet->target = $packet->getEntityRuntimeId(); //blame pmmp :(
 				$packet->eid = $packet->getEntityRuntimeId(); //blame pmmp :(
-
-				$pk = $player->getInventoryUtils()->onTakeItemEntity($packet);
-
-				return $pk;
+				return $player->getInventoryUtils()->onTakeItemEntity($packet);
 
 			case Info::MOVE_ENTITY_PACKET:
 				if($packet->entityRuntimeId === $player->getId()){//TODO
@@ -1739,15 +1749,19 @@ class Translator{
 				return null;
 
 			case Info::CONTAINER_OPEN_PACKET:
+				assert($packet instanceof ContainerOpenPacket);
 				return $player->getInventoryUtils()->onWindowOpen($packet);
 
 			case Info::CONTAINER_CLOSE_PACKET:
+				assert($packet instanceof ContainerClosePacket);
 				return $player->getInventoryUtils()->onWindowCloseFromPEtoPC($packet);
 
 			case Info::INVENTORY_SLOT_PACKET:
+				assert($packet instanceof ContainerSetSlotPacket);
 				return $player->getInventoryUtils()->onWindowSetSlot($packet);
 
 			case Info::CONTAINER_SET_DATA_PACKET:
+				assert($packet instanceof ContainerSetContentPacket);
 				return $player->getInventoryUtils()->onWindowSetData($packet);
 
 			case Info::INVENTORY_CONTENT_PACKET:
