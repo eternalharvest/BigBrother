@@ -41,7 +41,8 @@
 		"php": ">=7.1",
 		"phpseclib/phpseclib": "2.0.6",
 		"ext-phar": "*",
-		"ext-json": "*"
+		"ext-json": "*",
+		"ext-yaml": "*"
 	},
 	"require-dev": {
 		"phan/phan": "^0.8.6",

@@ -35,7 +35,7 @@ define("GITHUB_API", "https://api.github.com/repos/%s/releases");
 define("USER_AGENT", "User-Agent: Mozilla/5.0 like Gecko");
 
 $include_dirs  = ['src', 'resources', 'vendor'];
-$include_files = ['LICENSE', 'README.md', 'plugin.yml'];
+$include_files = ['LICENSE', 'README.md'];
 
 try {
 	if(ini_get("phar.readonly") == 1){
@@ -69,13 +69,66 @@ try {
 	]);
 
 	echo "Running DevTools..." . PHP_EOL;
-	echo "$command" . PHP_EOL;
+	echo $command . PHP_EOL;
 	system($command);
 
 	$phar = new Phar(PROJECT_ROOT . BIGBROS_FILE);
 	foreach ($include_files as $file){
 		$phar->addFile(PROJECT_ROOT . '/', $file);
 	}
+
+	@exec("git describe --tags --always --dirty", $build_rev);
+	$build_date = date("r");
+
+	$yaml = preg_replace_callback(
+		'/<([A-Z]+)>/',
+		function($matches)
+			use($build_rev)
+		{
+			switch($matches[1]){
+				case "VERSION":
+					return $build_rev[0];
+				default:
+					return "";
+			}
+		},
+		@file_get_contents(PROJECT_ROOT . "/plugin.yml")
+	);
+
+	$metadata = yaml_parse($yaml);
+
+	$phar->addFromString("/plugin.yml", $yaml);
+	$phar->setMetadata([
+		"name" => $metadata["name"],
+		"version" => $metadata["version"],
+		"main" => $metadata["main"],
+		"api" => $metadata["api"],
+		"depend" => ($metadata["depend"] ?? ""),
+		"description" => ($metadata["description"] ?? ""),
+		"authors" => ($metadata["authors"] ?? ""),
+		"website" => ($metadata["website"] ?? ""),
+		"creationDate" => time()
+	]);
+
+	$stub = <<<EOF
+#!/usr/bin/env php
+<?php
+	echo "PocketMine-MP plugin BigBrother v$build_rev[0]" . PHP_EOL;
+	echo "This file has been generated at $build_date" . PHP_EOL;
+	echo "----------------" . PHP_EOL;
+
+	if(extension_loaded("phar")){
+		\$phar = new \Phar(__FILE__);
+		foreach(\$phar->getMetadata() as \$key => \$value){
+			echo sprintf("%s: %s", \$key, is_array(\$value) ? implode(", ", \$value) : \$value) . PHP_EOL;
+		}
+	}
+	__HALT_COMPILER();
+EOF;
+
+	$phar->setStub($stub);
+
+	chmod(PROJECT_ROOT . BIGBROS_FILE, 0755);
 }catch(Exception $e){
 	echo "unexpected error has occured!" . PHP_EOL;
 	echo $e->getTraceAsString() . PHP_EOL;
