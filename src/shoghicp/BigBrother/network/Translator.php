@@ -55,7 +55,7 @@ use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\MobEffectPacket;
 use pocketmine\network\mcpe\protocol\ContainerOpenPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
-use pocketmine\network\mcpe\protocol\ContainerSetSlotPacket;
+use pocketmine\network\mcpe\protocol\InventorySlotPacket;
 use pocketmine\network\mcpe\protocol\ContainerSetContentPacket;
 use pocketmine\network\mcpe\protocol\TakeItemEntityPacket;
 use pocketmine\utils\TextFormat;
@@ -1757,7 +1757,7 @@ class Translator{
 				return $player->getInventoryUtils()->onWindowCloseFromPEtoPC($packet);
 
 			case Info::INVENTORY_SLOT_PACKET:
-				assert($packet instanceof ContainerSetSlotPacket);
+				assert($packet instanceof InventorySlotPacket);
 				return $player->getInventoryUtils()->onWindowSetSlot($packet);
 
 			case Info::CONTAINER_SET_DATA_PACKET:
