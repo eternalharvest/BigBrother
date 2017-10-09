@@ -44,6 +44,20 @@ try {
 	}
 
 	/**
+	 * check syntax for each modified php files in this repository before build
+	 */
+	$proc = proc_open('git diff-index --name-only --diff-filter=ACMR HEAD', [1 => ['pipe', 'w']], $pipes);
+	while(($file = fgets($pipes[1])) !== false){
+		if(strtolower(substr($file = rtrim($file), -4)) == '.php'){
+			system(join(' ', [PHP_BINARY, '-l', PROJECT_ROOT . '/' . $file]), $retval);
+			if($retval !== 0){
+				exit($retval);
+			}
+		}
+	}
+	fclose($pipes[1]);
+
+	/**
 	 * skip if devtools is already downloaded less than 15 min
 	 * to avoid reaching github API rate limit
 	 */
