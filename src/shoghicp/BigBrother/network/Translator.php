@@ -212,10 +212,10 @@ class Translator{
 
 				switch($packet->type){
 					case 0://interact
-						$pk->action = InteractPacket::ACTION_RIGHT_CLICK;
+						$pk->action = InventoryTransactionPacket::USE_ITEM_ON_ENTITY_ACTION_INTERACT;
 					break;
 					case 1://attack
-						$pk->action = InteractPacket::ACTION_LEFT_CLICK;
+						$pk->action = InventoryTransactionPacket::USE_ITEM_ON_ENTITY_ACTION_ATTACK;
 					break;
 					case 2://interact at
 						$pk->action = InteractPacket::ACTION_MOUSEOVER;
@@ -462,7 +462,7 @@ class Translator{
 						}
 
 						$player->getInventory()->setItemInHand($item);
-						$player->dropItemNaturally($dropItem);
+						$player->dropItem($dropItem);
 
 						return null;
 					break;
@@ -1103,9 +1103,9 @@ class Translator{
 				$pk->yaw = 0;
 				$pk->pitch = 0;
 				$pk->data = 1;
-				$pk->velocityX = $packet->motion->x;
-				$pk->velocityY = $packet->motion->y;
-				$pk->velocityZ = $packet->motion->z;
+				$pk->velocityX = 0;
+				$pk->velocityY = 0;
+				$pk->velocityZ = 0;
 				$packets[] = $pk;
 
 				$pk = new EntityMetadataPacket();

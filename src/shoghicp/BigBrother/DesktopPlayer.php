@@ -117,13 +117,6 @@ class DesktopPlayer extends Player{
 	}
 
 	/**
-	 * @param Item $item
-	 */
-	public function dropItemNaturally(Item $item) : void{
-		$this->getLevel()->dropItem($this->add(0, 1.3, 0), $item, $this->getDirectionVector()->multiply(0.4), 40);
-	}
-
-	/**
 	 * @return int dimension
 	 */
 	public function bigBrother_getDimension() : int{
@@ -217,7 +210,7 @@ class DesktopPlayer extends Player{
 	}
 
 	/**
-	 * @param array $position
+	 * @param array $positionData
 	 */
 	public function bigBrother_setBreakPosition(array $positionData = []) : void{
 		$this->bigBrother_breakPosition = $positionData;
@@ -488,19 +481,31 @@ class DesktopPlayer extends Player{
 
 	/**
 	 * @param string $username
-	 * @return array|bool|null
+	 * @return array|bool profile data if success else false
 	 */
 	public function getProfile(string $username){
-		$profile = json_decode(Utils::getURL("https://api.mojang.com/users/profiles/minecraft/".$username), true);
+		$profile = null;
+		$info = null;
+
+		$response = Utils::getURL("https://api.mojang.com/users/profiles/minecraft/".$username);
+		if($response !== false){
+			$profile = json_decode($response, true);
+		}
+
 		if(!is_array($profile)){
 			return false;
 		}
 
 		$uuid = $profile["id"];
-		$info = json_decode(Utils::getURL("https://sessionserver.mojang.com/session/minecraft/profile/".$uuid."", 3), true);
-		if(!isset($info["id"])){
+		$response = Utils::getURL("https://sessionserver.mojang.com/session/minecraft/profile/".$uuid, 3);
+		if($response !== false){
+			$info = json_decode($response, true);
+		}
+
+		if($info === null or !isset($info["id"])){
 			return false;
 		}
+
 		return $info;
 	}
 
