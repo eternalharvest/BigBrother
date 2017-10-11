@@ -46,9 +46,9 @@ class SpawnObjectPacket extends OutboundPacket{
 	/** @var float */
 	public $z;
 	/** @var float */
-	public $yaw;
-	/** @var float */
 	public $pitch;
+	/** @var float */
+	public $yaw;
 	/** @var int */
 	public $data = 0;
 	/** @var float */
@@ -63,19 +63,16 @@ class SpawnObjectPacket extends OutboundPacket{
 	}
 
 	protected function encode() : void{
-		assert($this->yaw >= 0 and $this->yaw < 360);
-		assert($this->pitch >= 0 and $this->pitch < 360);
-
 		$this->putVarInt($this->eid);
 		$this->put($this->uuid);
 		$this->putByte($this->type);
 		$this->putDouble($this->x);
 		$this->putDouble($this->y);
 		$this->putDouble($this->z);
-		$this->putByte((int) round($this->yaw * 256 / 360));//TODO make sure
-		$this->putByte((int) round($this->pitch * 256 / 360));//TODO make sure
+		$this->putAngle($this->pitch);
+		$this->putAngle($this->yaw);
 		$this->putInt($this->data);
-		if($this->data > 0){
+		if($this->data > 0){//TODO make sure whther if this condition is really needed
 			$this->putShort((int) round($this->velocityX * 8000));
 			$this->putShort((int) round($this->velocityY * 8000));
 			$this->putShort((int) round($this->velocityZ * 8000));
