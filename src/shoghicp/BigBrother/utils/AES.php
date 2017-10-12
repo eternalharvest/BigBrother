@@ -31,6 +31,10 @@ namespace shoghicp\BigBrother\utils;
 
 use phpseclib\Crypt\Rijndael;
 
+/**
+ * Suppress this warning because phpseclib doccomment is wrong
+ * @suppress PhanParamSignatureMismatch
+ */
 class AES extends Rijndael{
 
 	const MODE_CFB8 = 38;
@@ -78,7 +82,7 @@ class AES extends Rijndael{
 	/**
 	 * TODO this method override private Base::_openssl_translate_mode()
 	 * @return string
-	 * @suppress PhanAccessMethodInternal
+	 * @suppress PhanTypeMismatchReturn
 	 * @override
 	 */
 	function _openssl_translate_mode(){
@@ -93,9 +97,9 @@ class AES extends Rijndael{
 	/**
 	 * TODO this method override private Base::_createInlineCryptFunction() method
 	 * @param array $cipher_code
-	 * @return string
-	 * @override
+	 * @return ?string
 	 * @suppress PhanDeprecatedFunctionInternal
+	 * @override
 	 */
 	public function _createInlineCryptFunction($cipher_code){
 		$inline = null;

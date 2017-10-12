@@ -308,6 +308,7 @@ class DesktopPlayer extends Player{
 	 * @param int        $x
 	 * @param int        $z
 	 * @param Level|null $level
+	 * @suppress PhanAccessMethodPrivate
 	 * @override
 	 */
 	private function unloadChunk(int $x, int $z, ?Level $level = null){

@@ -123,6 +123,7 @@ class Session{
 
 	/**
 	 * @param string $secret
+	 * @suppress PhanAccessMethodInternal
 	 */
 	public function enableEncryption(string $secret) : void{
 		$this->aes = new AES();

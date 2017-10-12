@@ -67,6 +67,7 @@ class ServerThread extends \Thread{
 	 * @param string|null     $icon
 	 *
 	 * @throws \Exception
+	 * @suppress PhanTypeComparisonFromArray
 	 */
 	public function __construct(\ThreadedLogger $logger, \ClassLoader $loader, int $port, string $interface = "0.0.0.0", string $motd = "Minecraft: PE server", string $icon = null, bool $autoStart = true){
 		$this->port = $port;
@@ -179,6 +180,7 @@ class ServerThread extends \Thread{
 
 	/**
 	 * @param string $str
+	 * @suppress PhanTypeArraySuspicious
 	 */
 	public function pushMainToThreadPacket(string $str) : void{
 		$this->internalQueue[] = $str;
@@ -194,6 +196,7 @@ class ServerThread extends \Thread{
 
 	/**
 	 * @param string $str
+	 * @suppress PhanTypeArraySuspicious
 	 */
 	public function pushThreadToMainPacket(string $str) : void{
 		$this->externalQueue[] = $str;

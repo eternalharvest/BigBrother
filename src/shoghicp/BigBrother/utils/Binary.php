@@ -38,6 +38,7 @@ class Binary extends \pocketmine\utils\Binary{
 	/**
 	 * @param string $input
 	 * @return string
+	 * @suppress PhanAccessMethodInternal
 	 */
 	public static function sha1(string $input) : string{
 		$number = new BigInteger(sha1($input, true), -256);
