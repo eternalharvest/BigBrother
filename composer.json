@@ -33,7 +33,7 @@
 	],
 	"scripts": {
 		"build": [
-			"@composer install --no-dev -o",
+			"@composer install --ansi --no-dev -o",
 			"@php contrib/build"
 		]
 	},
