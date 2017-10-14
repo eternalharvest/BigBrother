@@ -1793,10 +1793,6 @@ class Translator{
 				assert($packet instanceof InventoryContentPacket);
 				return $player->getInventoryUtils()->onWindowSetContent($packet);
 
-			case Info::CRAFTING_DATA_PACKET:
-				$player->getInventoryUtils()->setCraftInfoData($packet->entries);
-				return null;
-
 			case Info::BLOCK_ENTITY_DATA_PACKET:
 				$pk = new UpdateBlockEntityPacket();
 				$pk->x = $packet->x;
@@ -2030,6 +2026,7 @@ class Translator{
 
 				return $packets;
 
+			case Info::CRAFTING_DATA_PACKET:
 			case Info::RESOURCE_PACKS_INFO_PACKET:
 			case Info::RESPAWN_PACKET:
 			case Info::ADVENTURE_SETTINGS_PACKET:

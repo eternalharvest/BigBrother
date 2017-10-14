@@ -47,6 +47,7 @@ use pocketmine\tile\Tile;
 use pocketmine\tile\EnderChest as TileEnderChest;
 use pocketmine\item\Item;
 use pocketmine\inventory\InventoryHolder;
+use pocketmine\inventory\CraftingRecipe;
 
 use shoghicp\BigBrother\BigBrother;
 use shoghicp\BigBrother\DesktopPlayer;
@@ -69,7 +70,9 @@ class InventoryUtils{
 	/** @var array */
 	private $windowInfo = [];
 	/** @var array */
-	private $craftInfoData = [];
+	private $shapedRecipes = [];
+	/** @var array */
+	private $shapelessRecipes = [];
 	/** @var Item */
 	private $playerHeldItem = null;
 	/** @var int */
@@ -97,6 +100,9 @@ class InventoryUtils{
 		$this->playerInventorySlot = array_fill(0, 36, Item::get(Item::AIR, 0, 0));
 		$this->playerHotbarSlot = array_fill(0, 9, Item::get(Item::AIR, 0, 0));
 		$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
+
+		$this->shapelessRecipes = $player->getServer()->getCraftingManager()->getShapelessRecipes();
+		$this->shapedRecipes = $player->getServer()->getCraftingManager()->getShapedRecipes();
 	}
 
 	/**
@@ -162,16 +168,24 @@ class InventoryUtils{
 		}
 
 		$slots = 0;
+		$saveSlots = 0;
 		if(($tile = $this->player->getLevel()->getTile(new Vector3((int) $packet->x, (int) $packet->y, (int) $packet->z))) instanceof Tile){
 			if($tile instanceof TileEnderChest){
-				$slots = $this->player->getEnderChestInventory()->getSize();
+				$slots = $saveSlots = $this->player->getEnderChestInventory()->getSize();
 				$title = "enderchest";
 			}elseif($tile instanceof InventoryHolder){
-				$slots = $tile->getInventory()->getSize();
+				$slots = $saveSlots = $tile->getInventory()->getSize();
 				if($title === "chest" and $slots === 54){
 					$title = "chestDouble";
 				}
 			}
+		}
+
+		if($title === "crafting"){
+			$saveSlots = 9;
+			$slots = 0;
+		}elseif($title === "repair"){
+			$slots = 0;
 		}
 
 		$pk = new OpenWindowPacket();
@@ -180,7 +194,7 @@ class InventoryUtils{
 		$pk->windowTitle = json_encode(["translate" => "container.".$title]);
 		$pk->slots = $slots;
 
-		$this->windowInfo[$packet->windowId] = ["type" => $packet->type, "slots" => $slots, "items" => []];
+		$this->windowInfo[$packet->windowId] = ["type" => $packet->type, "slots" => $saveSlots, "items" => []];
 
 		return $pk;
 	}
@@ -190,22 +204,24 @@ class InventoryUtils{
 	 * @return ContainerClosePacket|null
 	 */
 	public function onWindowCloseFromPCtoPE(ClientCloseWindowPacket $packet) : ?ContainerClosePacket{
-		foreach($this->playerCraftSlot as $num => $item){
-			if($item->getId() === Item::AIR){
-
+		foreach($this->playerCraftSlot as $slot => $item){
+			if($item->getId() !== Item::AIR){
+				$this->player->getCraftingGrid()->setItem(0, Item::get(Item::AIR, 0, 0));
 			}
-			$this->player->dropItem($item);
-			$this->playerCraftSlot[$num] = Item::get(Item::AIR, 0, 0);
-			//SOURCE_TYPE_CONTAINER_DROP_CONTENTS
+			if($slot !== 0){
+				$this->player->dropItem($item);
+			}
+			$this->playerCraftSlot[$slot] = Item::get(Item::AIR, 0, 0);
 		}
 
-		foreach($this->playerCraftTableSlot as $num => $item){
-			if($item->getId() === Item::AIR){
-
+		foreach($this->playerCraftTableSlot as $slot => $item){
+			if($item->getId() !== Item::AIR){
+				$this->player->getCraftingGrid()->setItem(0, Item::get(Item::AIR, 0, 0));
 			}
-			$this->player->dropItem($item);
-			$this->playerCraftTableSlot[$num] = Item::get(Item::AIR, 0, 0);
-			//SOURCE_TYPE_CONTAINER_DROP_CONTENTS
+			if($slot !== 0){
+				$this->player->dropItem($item);
+			}
+			$this->playerCraftTableSlot[$slot] = Item::get(Item::AIR, 0, 0);
 		}
 
 		$this->player->dropItem($this->playerHeldItem);
@@ -416,9 +432,9 @@ class InventoryUtils{
 					$pk->items = $this->getHotbar($pk->items);
 
 					$packets[] = $pk;
+				}else{
+					echo "[InventoryUtils] InventoryContentPacket: 0x".bin2hex(chr($packet->windowId))."\n";
 				}
-
-				echo "[InventoryUtils] InventoryContentPacket: 0x".bin2hex(chr($packet->windowId))."\n";
 			break;
 		}
 
@@ -440,7 +456,7 @@ class InventoryUtils{
 					case 0://Left mouse click
 						$accepted = true;
 
-						if($item->equals($this->playerHeldItem, true)){
+						if($item->equals($this->playerHeldItem, true, true)){
 							$item->setCount($item->getCount() + $this->playerHeldItem->getCount());
 
 							$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
@@ -616,38 +632,127 @@ class InventoryUtils{
 			break;
 		}
 
-		$otherAction = null;
-		if($packet->windowID === 0){
+		$isCraftingPart = false;
+		$otherAction = [];
+		if($packet->windowID === 0){//TODO: must refactoring
 			if($packet->slot >= 1 and $packet->slot <= 4){//Crafting Slot
+				$oldItem = clone $this->playerCraftSlot[$packet->slot];
 				$this->playerCraftSlot[$packet->slot] = $item;
 
-				/*
-				if(){
-	
+				$inventorySlot = $packet->slot - 1;
+
+				if($heldItem->equals($item, true, true)){//TODO: more check item?
+					if($oldItem->getId() === Item::AIR){
+						$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_ADD_INGREDIENT, $inventorySlot, $oldItem, $item);
+					}else{
+						$air = Item::get(Item::AIR, 0, 0);
+						$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_REMOVE_INGREDIENT, $inventorySlot, $oldItem, $air);
+					}
+				}else{//TODO: must debug
+					echo "not equals\n";
+					echo "must debug\n";
+					$air = Item::get(Item::AIR, 0, 0);
+					$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_REMOVE_INGREDIENT, $inventorySlot, $oldItem, $air);
 				}
 
-				*/
-				//$otherAction = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, ContainerIds::CURSOR, 0, $heldItem, $this->playerHeldItem);
-
-				$this->onCraft();
+				$this->onCraft($packet->windowID);
 			}elseif($packet->slot === 0){//Crafting Result
 				$resultItem = $this->playerCraftSlot[0];
-				/*if($resultItem->){
 
-				}*/
-				var_dump([$resultItem, $this->playerHeldItem, $item]);
+				if($heldItem->equals($item, true, true)){//TODO: more check item?
+					$accepted = false;
+
+					$this->playerHeldItem = $heldItem;
+				}else{
+					foreach($this->playerCraftSlot as $slot => $item){//TODO: must send slot?
+						if($slot === 0){
+							$this->playerCraftSlot[$slot] = Item::get(Item::AIR, 0, 0);
+						}else{
+							if($item->getCount() > 1){
+								$this->playerCraftSlot[$slot] = $item->setCount($item->getCount() - 1);
+							}else{
+								$this->playerCraftSlot[$slot] = Item::get(Item::AIR, 0, 0);
+							}
+						}
+					}
+
+					$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_RESULT, 0, $resultItem, Item::get(Item::AIR, 0, 0));
+				}
+
+				$this->onCraft($packet->windowID);
 			}
 		}elseif($packet->windowID === 255){//CraftingTable Slot
 			if($packet->slot >= 1 and $packet->slot <= 4){//Crafting Slot
+				$oldItem = clone $this->playerCraftTableSlot[$packet->slot];
 				$this->playerCraftTableSlot[$packet->slot] = $item;
 
-				$this->onCraft();
+				$inventorySlot = $packet->slot - 1;
+
+				if($heldItem->equals($item, true, true)){//TODO: more check item?
+					if($oldItem->getId() === Item::AIR){
+						$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_ADD_INGREDIENT, $inventorySlot, $oldItem, $item);
+					}else{
+						$air = Item::get(Item::AIR, 0, 0);
+						$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_REMOVE_INGREDIENT, $inventorySlot, $oldItem, $air);
+					}
+				}else{//TODO: must debug
+					echo "not equals\n";
+					echo "must debug\n";
+					$air = Item::get(Item::AIR, 0, 0);
+					$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_REMOVE_INGREDIENT, $inventorySlot, $oldItem, $air);
+				}
+
+				$this->onCraft($packet->windowID);
 			}elseif($packet->slot === 0){//Crafting Result
 				$resultItem = $this->playerCraftTableSlot[0];
-				/*if($resultItem->){
 
-				}*/
-				var_dump([$resultItem, $this->playerHeldItem, $item]);
+				if($heldItem->equals($item, true, true)){//TODO: more check item?
+					$accepted = false;
+
+					$this->playerHeldItem = $heldItem;
+				}else{
+					foreach($this->playerCraftTableSlot as $slot => $item){//TODO: must send slot?
+						if($slot === 0){
+							$this->playerCraftTableSlot[$slot] = Item::get(Item::AIR, 0, 0);
+						}else{
+							if($item->getCount() > 1){
+								$this->playerCraftTableSlot[$slot] = $item->setCount($item->getCount() - 1);
+							}else{
+								$this->playerCraftTableSlot[$slot] = Item::get(Item::AIR, 0, 0);
+							}
+						}
+					}
+
+					$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_TODO, NetworkInventoryAction::SOURCE_TYPE_CRAFTING_RESULT, 0, $resultItem, Item::get(Item::AIR, 0, 0));
+				}
+
+				$this->onCraft($packet->windowID);
+			}
+		}
+
+		if(isset($this->windowInfo[$packet->windowID]["type"])){
+			switch($this->windowInfo[$packet->windowID]["type"]){
+				case WindowTypes::FURNACE:
+					switch($packet->slot){
+						case 1://fuel
+							if($heldItem->equals($item, true, true)){//TODO: more check item?
+								if($item->getFuelTime() === 0){
+									$accepted = false;
+
+									$this->playerHeldItem = $heldItem;
+								}
+							}
+						break;
+						case 2://output
+							if($heldItem->equals($item, true, true)){//TODO: more check item?
+								$accepted = false;
+
+								$this->playerHeldItem = $heldItem;
+							}
+						break;
+					}
+				break;
+				//TODO: add more?
 			}
 		}
 
@@ -656,40 +761,60 @@ class InventoryUtils{
 		$packets = [];
 		if($accepted){
 			$windowId = $packet->windowID;
-			$inventorySlot = $packet->slot;
-
-			if($windowId !== ContainerIds::INVENTORY){
-				if($inventorySlot >= $this->windowInfo[$packet->windowID]["slots"]){
-					$windowId = ContainerIds::INVENTORY;
-
-					if($inventorySlot >= 36 and $inventorySlot < 45){
-						$slots = 0;
-					}else{
-						$slots = 9;
-					}
-
-					$inventorySlot = ($inventorySlot - $this->windowInfo[$packet->windowID]["slots"]) + $slots;
-					$oldItem = $this->player->getInventory()->getItem($inventorySlot);
-				}else{
-					$oldItem = $this->windowInfo[$packet->windowID]["items"][$inventorySlot];
-				}
-			}else{
-				if($inventorySlot >= 36 and $inventorySlot < 45){
-					$inventorySlot -= 36;
-				}
-
-				$oldItem = $this->player->getInventory()->getItem($inventorySlot);
-			}
-
-			$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, $windowId, $inventorySlot, $oldItem, $item);
+			$inventorySlot = $saveInventorySlot = $packet->slot;
 
 			$pk = new InventoryTransactionPacket();
 			$pk->transactionType = InventoryTransactionPacket::TYPE_NORMAL;
 
-			if(is_null($otherAction)){
+			if(count($otherAction) === 0){
+				if($windowId !== ContainerIds::INVENTORY){
+					if($inventorySlot >= $this->windowInfo[$packet->windowID]["slots"]){
+						$windowId = ContainerIds::INVENTORY;
+						$inventorySlot -= $this->windowInfo[$packet->windowID]["slots"];
+
+						if($inventorySlot >= 27 and $inventorySlot < 36){
+							$inventorySlot -= 27;
+							$saveInventorySlot = $inventorySlot;
+
+							$oldItem = $this->playerHotbarSlot[$inventorySlot];
+							$this->playerHotbarSlot[$inventorySlot] = $item;
+						}else{
+							$saveInventorySlot += 9;
+
+							$oldItem = $this->playerInventorySlot[$inventorySlot];
+							$this->playerInventorySlot[$inventorySlot] = $item;
+						}
+					}else{
+						if($packet->windowID === 255){
+							$oldItem = $this->playerCraftTableSlot[$inventorySlot];
+							//Already saved!
+						}else{
+							$oldItem = $this->windowInfo[$packet->windowID]["items"][$inventorySlot];
+							$this->windowInfo[$packet->windowID]["items"][$inventorySlot] = $item;
+						}
+					}
+				}else{
+					if($inventorySlot >= 36 and $inventorySlot < 45){
+						$inventorySlot -= 36;
+						$saveInventorySlot = $inventorySlot;
+
+						$oldItem = $this->playerHotbarSlot[$inventorySlot];
+						$this->playerHotbarSlot[$inventorySlot] = $item;
+					}else{
+						$inventorySlot -= 9;
+
+						$oldItem = $this->playerInventorySlot[$inventorySlot];
+						$this->playerInventorySlot[$inventorySlot] = $item;
+					}
+				}
+
+				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, $windowId, $saveInventorySlot, $oldItem, $item);
 				$pk->actions[] = $action;
 			}else{
-				$pk->actions[] = $otherAction;
+				$pk->isCraftingPart = $isCraftingPart;
+				foreach($otherAction as $action){
+					$pk->actions[] = $action;
+				}
 			}
 
 			$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::CURSOR, 0, $heldItem, $this->playerHeldItem);
@@ -726,7 +851,7 @@ class InventoryUtils{
 						$dropItem = clone $packet->item;
 						$dropItem->setCount(1);
 					}
-					
+
 					$this->player->getInventory()->setItem($slot, $item);
 					break;
 				}
@@ -738,8 +863,9 @@ class InventoryUtils{
 		}else{
 			if($packet->slot > 4 and $packet->slot < 9){//Armor
 				$inventorySlot = $packet->slot - 5;
-				$oldItem = $this->player->getInventory()->getItem(36 + $packet->slot);
+				$oldItem = $this->playerInventorySlot[36 + $packet->slot];
 				$newItem = $packet->item;
+				$this->playerInventorySlot[36 + $packet->slot] = $newItem;
 
 				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::ARMOR, $inventorySlot, $oldItem, $newItem);
 			}else{
@@ -749,8 +875,9 @@ class InventoryUtils{
 					$inventorySlot = $packet->slot;
 				}
 
-				$oldItem = $this->player->getInventory()->getItem($inventorySlot);
+				$oldItem = $this->playerInventorySlot[$inventorySlot];
 				$newItem = $packet->item;
+				$this->playerInventorySlot[$inventorySlot] = $newItem;
 
 				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::INVENTORY, $inventorySlot, $oldItem, $newItem);
 			}
@@ -802,15 +929,86 @@ class InventoryUtils{
 		return null;
 	}
 
-	public function onCraft() : void{
-		//TODO implement me!!
-	}
-
 	/**
-	 * @param array $craftInfoData
+	 * @param int $windowId
 	 */
-	public function setCraftInfoData(array $craftInfoData) : void{
-		$this->craftInfoData = $craftInfoData;
+	public function onCraft(int $windowId) : void{
+		echo "[InventoryUtils][Debug] onCraft\n";
+		if($windowId !== 0 and $windowId !== 255){
+			echo "[InventoryUtils][Debug] called onCraft\n";
+			return;
+		}
+
+		if($windowId === 0){
+			$inputSlotMap = [];
+			foreach($this->playerCraftSlot as $slot => $item){
+				if($slot === 0){
+					continue;
+				}
+				
+				$gridOffset = $slot - 1;
+				$y = (int) ($gridOffset / 2);
+				$x = $gridOffset % 2;
+				$gridItem = clone $item;
+				$inputSlotMap[$y][$x] = $gridItem->setCount(1);
+			}
+
+			$outputSlotMap = array_fill(0, 2, array_fill(0, 2, Item::get(Item::AIR, 0, 0)));
+		}elseif($windowId === 255){
+			$inputSlotMap = [];
+			foreach($this->playerCraftTableSlot as $slot => $item){
+				if($slot === 0){
+					continue;
+				}
+
+				$gridOffset = $slot - 1;
+				$y = (int) ($gridOffset / 3);
+				$x = $gridOffset % 3;
+				$gridItem = clone $item;
+				$inputSlotMap[$y][$x] = $gridItem->setCount(1);
+			}
+
+			$outputSlotMap = array_fill(0, 3, array_fill(0, 3, Item::get(Item::AIR, 0, 0)));
+		}
+
+		$resultRecipe = null;
+		foreach($this->shapedRecipes as $jsonResult => $jsonSlotData){
+			foreach($jsonSlotData as $jsonSlotMap => $recipe){
+				if($recipe->matchItems($inputSlotMap, $outputSlotMap)){
+					$resultRecipe = $recipe;
+					break;
+				}
+			}
+		}
+
+		if(is_null($resultRecipe)){
+			foreach($this->shapelessRecipes as $jsonResult => $jsonSlotData){
+				foreach($jsonSlotData as $jsonSlotMap => $recipe){
+					if($recipe->matchItems($inputSlotMap, $outputSlotMap)){
+						$resultRecipe = $recipe;
+						break;
+					}
+				}
+			}
+		}
+
+		if(!is_null($resultRecipe)){
+			$resultItem = $resultRecipe->getResult();
+		}else{
+			$resultItem = Item::get(Item::AIR, 0, 0);
+		}
+
+		if($windowId === 0){
+			$this->playerCraftSlot[0] = $resultItem;
+		}elseif($windowId === 255){
+			$this->playerCraftTableSlot[0] = $resultItem;
+		}
+
+		$pk = new SetSlotPacket();
+		$pk->windowID = $windowId;
+		$pk->item = $resultItem;
+		$pk->slot = 0;//result slot
+		$this->player->putRawPacket($pk);
 	}
 
 	/**
