@@ -56,8 +56,10 @@ use pocketmine\network\mcpe\protocol\MobEffectPacket;
 use pocketmine\network\mcpe\protocol\ContainerOpenPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\network\mcpe\protocol\InventorySlotPacket;
-use pocketmine\network\mcpe\protocol\ContainerSetContentPacket;
+use pocketmine\network\mcpe\protocol\InventoryContentPacket;
+use pocketmine\network\mcpe\protocol\ContainerSetDataPacket;
 use pocketmine\network\mcpe\protocol\TakeItemEntityPacket;
+use pocketmine\network\mcpe\protocol\BatchPacket;
 use pocketmine\utils\TextFormat;
 use pocketmine\utils\UUID;
 use pocketmine\nbt\NBT;
@@ -111,6 +113,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\UpdateHealthPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\UpdateBlockEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\UseBedPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\NamedSoundEffectPacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\CreativeInventoryActionPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\ClickWindowPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\CloseWindowPacket;
 use shoghicp\BigBrother\utils\Binary;
@@ -589,6 +592,7 @@ class Translator{
 				return $pk;
 
 			case InboundPacket::CREATIVE_INVENTORY_ACTION_PACKET:
+				assert($packet instanceof CreativeInventoryActionPacket);
 				$pk = $player->getInventoryUtils()->onCreativeInventoryAction($packet);
 
 				return $pk;
@@ -1782,10 +1786,11 @@ class Translator{
 				return $player->getInventoryUtils()->onWindowSetSlot($packet);
 
 			case Info::CONTAINER_SET_DATA_PACKET:
-				assert($packet instanceof ContainerSetContentPacket);
+				assert($packet instanceof ContainerSetDataPacket);
 				return $player->getInventoryUtils()->onWindowSetData($packet);
 
 			case Info::INVENTORY_CONTENT_PACKET:
+				assert($packet instanceof InventoryContentPacket);
 				return $player->getInventoryUtils()->onWindowSetContent($packet);
 
 			case Info::CRAFTING_DATA_PACKET:
@@ -2000,6 +2005,7 @@ class Translator{
 				return null;*/
 
 			case 0xfe: //Info::BATCH_PACKET
+				assert($packet instanceof BatchPacket);
 				$packets = [];
 
 				$packet->decode();
