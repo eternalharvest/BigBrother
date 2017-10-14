@@ -60,6 +60,7 @@ use pocketmine\network\mcpe\protocol\InventoryContentPacket;
 use pocketmine\network\mcpe\protocol\ContainerSetDataPacket;
 use pocketmine\network\mcpe\protocol\TakeItemEntityPacket;
 use pocketmine\network\mcpe\protocol\BatchPacket;
+use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
 use pocketmine\utils\TextFormat;
 use pocketmine\utils\UUID;
 use pocketmine\nbt\NBT;
@@ -181,7 +182,10 @@ class Translator{
 					"SkinSettings" => $packet->skinSetting,
 				]);
 
-				return null;
+				$pk = new RequestChunkRadiusPacket();
+				$pk->radius = $packet->view;
+
+				return $pk;
 
 			case InboundPacket::CONFIRM_TRANSACTION_PACKET://Confirm
 				return null;
@@ -486,6 +490,7 @@ class Translator{
 						}
 
 						$player->getInventory()->setItemInHand($item);
+						$player->getInventory()->sendHeldItem($player->getViewers());
 						$player->dropItem($dropItem);
 
 						return null;
