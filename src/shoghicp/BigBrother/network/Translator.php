@@ -91,6 +91,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\EntityEquipmentPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\EntityEffectPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\EntityStatusPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\EntityHeadLookPacket;
+use shoghicp\BigBrother\network\protocol\Play\Server\EntityLookPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\EntityMetadataPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\EntityTeleportPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\EntityVelocityPacket;
@@ -102,6 +103,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\PlayerListPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\ChunkDataPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SelectAdvancementTabPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\ServerDifficultyPacket;
+use shoghicp\BigBrother\network\protocol\Play\Server\SpawnExperienceOrbPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnMobPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnObjectPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnPlayerPacket;
@@ -991,9 +993,20 @@ class Translator{
 					/*case 68://ThrownExpBottle
 						//Spawn Object
 					break;
+					*/
 					case 69://XPOrb
-						//Spawn Experience Orb
+						$entity = $player->getLevel()->getEntity($packet->entityRuntimeId);
+
+						$pk = new SpawnExperienceOrbPacket();
+						$pk->eid = $packet->entityRuntimeId;
+						$pk->x = $packet->position->x;
+						$pk->y = $packet->position->y;
+						$pk->z = $packet->position->z;
+						$pk->count = $entity->namedtag["Experience"];
+
+						return $pk;
 					break;
+					/*
 					case 71://EnderCrystal
 						//Spawn Object
 					break;
@@ -1188,9 +1201,16 @@ class Translator{
 					$pk->pitch = $packet->pitch;
 					$packets[] = $pk;
 
+					$pk = new EntityLookPacket();
+					$pk->eid = $packet->entityRuntimeId;
+					$pk->yaw = $packet->headYaw;
+					$pk->pitch = $packet->pitch;
+					$pk->onGround = $packet->onGround;
+					$packets[] = $pk;
+
 					$pk = new EntityHeadLookPacket();
 					$pk->eid = $packet->entityRuntimeId;
-					$pk->yaw = $packet->yaw;
+					$pk->yaw = $packet->headYaw;
 					$packets[] = $pk;
 
 					return $packets;
@@ -1221,9 +1241,16 @@ class Translator{
 					$pk->pitch = $packet->pitch;
 					$packets[] = $pk;
 
+					$pk = new EntityLookPacket();
+					$pk->eid = $packet->entityRuntimeId;
+					$pk->yaw = $packet->headYaw;
+					$pk->pitch = $packet->pitch;
+					$pk->onGround = $packet->onGround;
+					$packets[] = $pk;
+
 					$pk = new EntityHeadLookPacket();
 					$pk->eid = $packet->entityRuntimeId;
-					$pk->yaw = $packet->yaw;
+					$pk->yaw = $packet->headYaw;
 					$packets[] = $pk;
 
 					return $packets;
