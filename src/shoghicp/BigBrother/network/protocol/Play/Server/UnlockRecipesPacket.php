@@ -31,53 +31,36 @@ namespace shoghicp\BigBrother\network\protocol\Play\Server;
 
 use shoghicp\BigBrother\network\OutboundPacket;
 
-class SpawnObjectPacket extends OutboundPacket{
+class UnlockRecipesPacket extends OutboundPacket{
 
 	/** @var int */
-	public $eid;
-	/** @var string */
-	public $uuid;
-	/** @var int */
-	public $type;
-	/** @var float */
-	public $x;
-	/** @var float */
-	public $y;
-	/** @var float */
-	public $z;
-	/** @var float */
-	public $pitch;
-	/** @var float */
-	public $yaw;
-	/** @var int */
-	public $data = 0;
+	public $actionID;
 	/** @var bool */
-	public $sendVelocity = false;
-	/** @var float */
-	public $velocityX;
-	/** @var float */
-	public $velocityY;
-	/** @var float */
-	public $velocityZ;
+	public $isCraftingBookOpen = false;
+	/** @var bool */
+	public $isFilteringCraftable = false;
+	/** @var int[] */
+	public $recipes = [];
+	/** @var int[] */
+	public $extraRecipes = [];
 
 	public function pid() : int{
-		return self::SPAWN_OBJECT_PACKET;
+		return self::UNLOCK_RECIPES_PACKET;
 	}
 
 	protected function encode() : void{
-		$this->putVarInt($this->eid);
-		$this->put($this->uuid);
-		$this->putByte($this->type);
-		$this->putDouble($this->x);
-		$this->putDouble($this->y);
-		$this->putDouble($this->z);
-		$this->putAngle($this->pitch);
-		$this->putAngle($this->yaw);
-		$this->putInt($this->data);
-		if($this->sendVelocity){
-			$this->putShort((int) round($this->velocityX * 8000));
-			$this->putShort((int) round($this->velocityY * 8000));
-			$this->putShort((int) round($this->velocityZ * 8000));
+		$this->putVarInt($this->actionID);
+		$this->putBool($this->isCraftingBookOpen);
+		$this->putBool($this->isFilteringCraftable);
+		$this->putVarInt(count($this->recipes));
+		foreach($this->recipes as $recipeId){
+			$this->putVarInt($recipeId);
+		}
+		if($this->actionID === 0){
+			$this->putVarInt(count($this->extraRecipes));
+			foreach($this->extraRecipes as $recipeId){
+				$this->putVarInt($recipeId);
+			}
 		}
 	}
 }
