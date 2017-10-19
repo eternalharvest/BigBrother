@@ -584,31 +584,25 @@ class InventoryUtils{
 			case 2:
 				switch($packet->button){
 					case 0://Number key 1
-
-					break;
 					case 1://Number key 2
-
-					break;
 					case 2://Number key 3
-
-					break;
 					case 3://Number key 4
-
-					break;
 					case 4://Number key 5
-
-					break;
 					case 5://Number key 6
-
-					break;
 					case 6://Number key 7
-
-					break;
 					case 7://Number key 8
-
-					break;
 					case 8://Number key 9
+						if($this->playerHeldItem->isNull()){
+							$accepted = true;
 
+							$slot = $this->getItemSlotRef($packet->windowID, $packet->slot);
+							$item = $this->playerHotbarSlot[$packet->button];
+							$this->playerHotbarSlot[$packet->button] = $slot;
+
+							echo "swap button: $packet->button, slot: $packet->slot, $item, $slot" . PHP_EOL;
+
+							$otherAction[] = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::HOTBAR, $packet->button, $item, $slot);
+						}
 					break;
 					default:
 						echo "[InventoryUtils] UnknownButtonType: ".$packet->mode." : ".$packet->button."\n";
@@ -799,17 +793,19 @@ class InventoryUtils{
 
 		$packets = [];
 		if($accepted){
-
 			$pk = new InventoryTransactionPacket();
 			$pk->transactionType = InventoryTransactionPacket::TYPE_NORMAL;
 			$pk->isCraftingPart = $isCraftingPart;
 
 			if($isContainer){
+				echo "is container" . PHP_EOL;
 				$slot = $this->getItemSlotRef($packet->windowID, $packet->slot, $windowId, $saveInventorySlot);
 				$oldItem = $slot;
 
 				if($packet->windowID !== 255){
 					$slot = $item;
+
+					echo "set old: $slot, new: $item" . PHP_EOL;
 				}
 
 				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, $windowId, $saveInventorySlot, $oldItem, $item);
@@ -988,6 +984,7 @@ class InventoryUtils{
 					if($recipe->matchItems($inputSlotMap, $outputSlotMap)){
 						$resultRecipe = $recipe;
 						break;
+
 					}
 				}
 			}
