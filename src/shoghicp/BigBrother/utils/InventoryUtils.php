@@ -95,7 +95,7 @@ class InventoryUtils{
 		$this->playerCraftSlot = array_fill(0, 5, Item::get(Item::AIR, 0, 0));
 		$this->playerCraftTableSlot = array_fill(0, 9, Item::get(Item::AIR, 0, 0));
 		$this->playerArmorSlot = array_fill(0, 5, Item::get(Item::AIR, 0, 0));
-		$this->playerInventorySlot = array_fill(0, 36, Item::get(Item::AIR, 0, 0));
+		$this->playerInventorySlot = array_fill(0, 27, Item::get(Item::AIR, 0, 0));
 		$this->playerHotbarSlot = array_fill(0, 9, Item::get(Item::AIR, 0, 0));
 		$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
 
@@ -128,7 +128,7 @@ class InventoryUtils{
 	}
 
 	private function dropHeldItem() : void{
-		if($this->playerHeldItem->getId() !== Item::AIR){
+		if(!$this->playerHeldItem->isNull()){
 			$this->player->dropItem($this->playerHeldItem);
 			$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
 			$this->player->getCursorInventory()->setItem(0, Item::get(Item::AIR, 0, 0));
@@ -140,7 +140,7 @@ class InventoryUtils{
 	 */
 	private function dropCraftingItem(array &$craftingItem) : void{
 		foreach($craftingItem as $slot => $item){
-			if($item->getId() !== Item::AIR){
+			if(!$item->isNull()){
 				$pk = new SetSlotPacket();
 				$pk->windowID = count($craftingItem) === 9 ? 255 : 0;
 				$pk->item = Item::get(Item::AIR, 0, 0);
@@ -276,12 +276,14 @@ class InventoryUtils{
 
 				if($packet->inventorySlot >= 0 and $packet->inventorySlot < $this->player->getInventory()->getHotbarSize()){
 					$pk->slot = $packet->inventorySlot + 36;
+					$inventorySlot = $packet->inventorySlot;
 
-					$this->playerHotbarSlot[$packet->inventorySlot] = $packet->item;
+					$this->playerHotbarSlot[$inventorySlot] = $packet->item;
 				}elseif($packet->inventorySlot >= $this->player->getInventory()->getHotbarSize() and $packet->inventorySlot < $this->player->getInventory()->getSize()){
 					$pk->slot = $packet->inventorySlot;
+					$inventorySlot = $packet->inventorySlot - 9;
 
-					$this->playerInventorySlot[$packet->inventorySlot] = $packet->item;
+					$this->playerInventorySlot[$inventorySlot] = $packet->item;
 				}elseif($packet->inventorySlot >= $this->player->getInventory()->getSize() and $packet->inventorySlot < $this->player->getInventory()->getSize() + 4){
 					// ignore this packet (this packet is not needed because this is duplicated packet)
 					$pk = null;
@@ -470,7 +472,6 @@ class InventoryUtils{
 
 							if($item->equals($this->playerHeldItem, true, true)){
 								$item->setCount($item->getCount() + $this->playerHeldItem->getCount());
-
 								$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
 							}else{
 								list($this->playerHeldItem, $item) = [$item, $this->playerHeldItem];//reverse
@@ -481,36 +482,16 @@ class InventoryUtils{
 						if($packet->slot !== 65535){
 							$accepted = true;
 
-							if($this->playerHeldItem->getId() === Item::AIR){
-								if($item->getCount() % 2 === 0){
-									$this->playerHeldItem = clone $item;
-									$this->playerHeldItem->setCount($item->getCount() / 2);
-
-									$item->setCount($item->getCount() / 2);
-								}else{
-									$item->setCount(($item->getCount() - 1) / 2);
-
-									$this->playerHeldItem = clone $item;
-									$this->playerHeldItem->setCount($item->getCount() + 1);
-								}
+							if($this->playerHeldItem->isNull()){
+								$this->playerHeldItem = clone $item;
+								$this->playerHeldItem->setCount((int) ceil($item->getCount() / 2));
+								$item->setCount((int) floor($item->getCount() / 2));
 							}else{
-								if($item->getId() === Item::AIR){
-									$item = clone $this->playerHeldItem;
-									$item->setCount(1);
-
-									if($this->playerHeldItem->getCount() === 1){
-										$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
-									}else{
-										$this->playerHeldItem->setCount($this->playerHeldItem->getCount() - 1);
-									}
+								if($item->isNull()){
+									$item = $this->playerHeldItem->pop();
 								}elseif($item->equals($this->playerHeldItem, true, true)){
+									$this->playerHeldItem->pop();
 									$item->setCount($item->getCount() + 1);
-
-									if($this->playerHeldItem->getCount() === 1){
-										$this->playerHeldItem = Item::get(Item::AIR, 0, 0);
-									}else{
-										$this->playerHeldItem->setCount($this->playerHeldItem->getCount() - 1);
-									}
 								}else{
 									list($this->playerHeldItem, $item) = [$item, $this->playerHeldItem];//reverse
 								}
@@ -835,58 +816,60 @@ class InventoryUtils{
 
 			foreach($this->player->getInventory()->getContents() as $slot => $item){
 				if($item->equalsExact($packet->item)){
-					if($item->getCount() === 1){
-						$item = Item::get(Item::AIR, 0, 0);
-						$dropItem = clone $packet->item;
-						$dropItem->setCount(1);
-					}else{
-						$item->setCount($item->getCount() - 1);
-						$dropItem = clone $packet->item;
-						$dropItem->setCount(1);
+					if(!$item->isNull()){
+						$dropItem = $item->pop();
+						$this->player->getInventory()->setItem($slot, $item);
 					}
-
-					$this->player->getInventory()->setItem($slot, $item);
 					break;
 				}
 			}
 
-			$this->player->dropItem($dropItem);
 			$this->player->getInventory()->sendHeldItem($this->player->getViewers());
+			if(!$dropItem->isNull()){
+				$this->player->dropItem($dropItem);
+			}
 
 			return null;
 		}else{
 			if($packet->slot > 4 and $packet->slot < 9){//Armor
 				$inventorySlot = $packet->slot - 5;
-				$oldItem = $this->playerInventorySlot[36 + $packet->slot];
+				$oldItem = $this->playerArmorSlot[$inventorySlot];
 				$newItem = $packet->item;
-				$this->playerInventorySlot[36 + $packet->slot] = $newItem;
+				$this->playerArmorSlot[$inventorySlot] = $newItem;
 
 				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::ARMOR, $inventorySlot, $oldItem, $newItem);
 			}else{
+				$newItem = $packet->item;
+
 				if($packet->slot > 35 and $packet->slot < 45){//hotbar
-					$inventorySlot = $packet->slot - 36;
+					$saveInventorySlot = $packet->slot - 36;
+					$inventorySlot = $saveInventorySlot;
+
+
+					$oldItem = $this->playerHotbarSlot[$inventorySlot];
+					$this->playerHotbarSlot[$inventorySlot] = $newItem;
 				}else{
-					$inventorySlot = $packet->slot;
+					$saveInventorySlot = $packet->slot;
+					$inventorySlot = $packet->slot - 9;
+
+					$oldItem = $this->playerInventorySlot[$inventorySlot];
+					$this->playerInventorySlot[$inventorySlot] = $newItem;
 				}
 
-				$oldItem = $this->playerInventorySlot[$inventorySlot];
-				$newItem = $packet->item;
-				$this->playerInventorySlot[$inventorySlot] = $newItem;
-
-				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::INVENTORY, $inventorySlot, $oldItem, $newItem);
+				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CONTAINER, ContainerIds::INVENTORY, $saveInventorySlot, $oldItem, $newItem);
 			}
 
 			$pk = new InventoryTransactionPacket();
 			$pk->transactionType = InventoryTransactionPacket::TYPE_NORMAL;
 			$pk->actions[] = $action;
 
-			if($oldItem->getId() !== Item::AIR and !$oldItem->equalsExact($newItem)){
+			if(!$oldItem->isNull() and !$oldItem->equalsExact($newItem)){
 				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CREATIVE, -1, NetworkInventoryAction::ACTION_MAGIC_SLOT_CREATIVE_DELETE_ITEM, Item::get(Item::AIR, 0, 0), $oldItem);
 
 				$pk->actions[] = $action;
 			}
 
-			if($newItem->getId() !== Item::AIR and !$oldItem->equalsExact($newItem)){
+			if(!$newItem->isNull() and !$oldItem->equalsExact($newItem)){
 				$action = $this->addNetworkInventoryAction(NetworkInventoryAction::SOURCE_CREATIVE, -1, NetworkInventoryAction::ACTION_MAGIC_SLOT_CREATIVE_CREATE_ITEM, $newItem, Item::get(Item::AIR, 0, 0));
 
 				$pk->actions[] = $action;

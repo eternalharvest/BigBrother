@@ -545,24 +545,22 @@ class Translator{
 					break;
 					case 3:
 					case 4:
-						if($packet->status === 4){
-							$item = $player->getInventory()->getItemInHand();
-							if($item->getCount() === 1){
-								$item = Item::get(Item::AIR, 0, 0);
-							}else{
-								$item->setCount($item->getCount() - 1);
-							}
+						$item = $player->getInventory()->getItemInHand();
+						$dropItem = Item::get(Item::AIR, 0, 0);
 
-							$dropItem = $player->getInventory()->getItemInHand();
-							$dropItem->setCount(1);
+						if($packet->status === 4){
+							if(!$item->isNull()){
+								$dropItem = $item->pop();
+							}
 						}else{
-							$item = Item::get(Item::AIR, 0, 0);
-							$dropItem = $player->getInventory()->getItemInHand();
+							list($dropItem, $item) = [$item, $dropItem];//swap
 						}
 
 						$player->getInventory()->setItemInHand($item);
 						$player->getInventory()->sendHeldItem($player->getViewers());
-						$player->dropItem($dropItem);
+						if(!$dropItem->isNull()){
+							$player->dropItem($dropItem);
+						}
 
 						return null;
 					break;
@@ -1604,8 +1602,8 @@ class Translator{
 				$pk->x = $packet->x;
 				$pk->y = $packet->y;
 				$pk->z = $packet->z;
-				$pk->actionID = $packet->case1;
-				$pk->actionParam = $packet->case2;
+				$pk->actionID = $packet->eventType;
+				$pk->actionParam = $packet->eventData;
 				$pk->blockType = $blockId = $player->getLevel()->getBlock(new Vector3($packet->x, $packet->y, $packet->z))->getId();
 
 				return $pk;
