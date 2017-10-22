@@ -51,8 +51,15 @@
 		"pmmp/spl": "dev-master"
 	},
 	"autoload": {
-		"psr-0": {
-			"shoghicp\\BigBrother\\": ["src"]
+		"psr-4": {
+			"shoghicp\\BigBrother\\": ["src/shoghicp/BigBrother"]
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"pocketmine\\": ["vendor/pmmp/pocketmine-mp/src/pocketmine"],
+			"raklib\\": ["vendor/pmmp/raklib"],
+			"": ["vendor/pmmp/spl"]
 		}
 	},
 	"repositories": [
