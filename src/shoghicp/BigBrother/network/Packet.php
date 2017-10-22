@@ -86,12 +86,12 @@ abstract class Packet extends \stdClass{
 	 * @return Item
 	 */
 	protected function getSlot() : Item{
-		$itemId = $this->getShort();
-		if($itemId === 65535){ //Empty
+		$itemId = $this->getSignedShort();
+		if($itemId === -1){ //Empty
 			return Item::get(Item::AIR, 0, 0);
 		}else{
-			$count = $this->getByte();
-			$damage = $this->getShort();
+			$count = $this->getSignedByte();
+			$damage = $this->getSignedShort();
 			$nbt = $this->get(true);
 
 			$nbt = ConvertUtils::convertNBTDataFromPCtoPE($nbt);
@@ -125,6 +125,10 @@ abstract class Packet extends \stdClass{
 		return Binary::readShort($this->get(2));
 	}
 
+	protected function getSignedShort() : int{
+		return Binary::readSignedShort($this->get(2));
+	}
+
 	protected function getTriad() : int{
 		return Binary::readTriad($this->get(3));
 	}
@@ -139,6 +143,10 @@ abstract class Packet extends \stdClass{
 
 	protected function getByte() : int{
 		return ord($this->buffer{$this->offset++});
+	}
+
+	protected function getSignedByte() : int{
+		return ord($this->buffer{$this->offset++}) << 56 >> 56;
 	}
 
 	protected function getAngle() : float{

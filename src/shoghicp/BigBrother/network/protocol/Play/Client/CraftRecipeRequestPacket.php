@@ -35,7 +35,7 @@ class CraftRecipeRequestPacket extends InboundPacket{
 
 	/** @var int */
 	public $windowID;
-	/** @var int[] */
+	/** @var int */
 	public $recipeId = -1;
 	/** @var bool */
 	public $isMakeAll = false;
@@ -45,7 +45,7 @@ class CraftRecipeRequestPacket extends InboundPacket{
 	}
 
 	protected function decode() : void{
-		$this->windowID = $this->getByte();
+		$this->windowID = $this->getSignedByte();
 		$this->recipeId = $this->getVarInt();
 		$this->isMakeAll = $this->getBool();
 	}
