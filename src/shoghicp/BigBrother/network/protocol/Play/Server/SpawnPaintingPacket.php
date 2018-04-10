@@ -30,38 +30,35 @@ declare(strict_types=1);
 namespace shoghicp\BigBrother\network\protocol\Play\Server;
 
 use shoghicp\BigBrother\network\OutboundPacket;
+use shoghicp\BigBrother\utils\Binary;
 
-class TitlePacket extends OutboundPacket{
-
-	const TYPE_SET_TITLE = 0;
-	const TYPE_SET_SUB_TITLE = 1;
-	const TYPE_SET_ACTION_BAR = 2;
-	const TYPE_SET_SETTINGS = 3;
-	const TYPE_HIDE = 4;
-	const TYPE_RESET = 5;
+class SpawnPaintingPacket extends OutboundPacket{
 
 	/** @var int */
-	public $actionID;
-	/** @var string|int[] */
-	public $data = null;
+	public $eid;
+	/** @var string */
+	public $uuid;
+	/** @var int */
+	public $x;
+	/** @var int */
+	public $y;
+	/** @var int */
+	public $z;
+	/** @var string */
+	public $title;
+	/** @var int */
+	public $direction;
+	
 
 	public function pid() : int{
-		return self::TITLE_PACKET;
+		return self::SPAWN_PAINTING_PACKET;
 	}
 
 	protected function encode() : void{
-		$this->putVarInt($this->actionID);
-		switch($this->actionID){
-			case self::TYPE_SET_TITLE:
-			case self::TYPE_SET_SUB_TITLE:
-			case self::TYPE_SET_ACTION_BAR:
-				$this->putString($this->data);
-			break;
-			case self::TYPE_SET_SETTINGS:
-				$this->putInt($this->data[0]);
-				$this->putInt($this->data[1]);
-				$this->putInt($this->data[2]);
-			break;
-		}
+		$this->putVarInt($this->eid);
+		$this->put($this->uuid);
+		$this->putString($this->title);
+		$this->putPosition($this->x, $this->y, $this->z);
+		$this->putByte($this->direction);
 	}
 }

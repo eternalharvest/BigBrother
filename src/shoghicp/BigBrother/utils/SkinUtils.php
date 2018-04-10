@@ -27,41 +27,33 @@
 
 declare(strict_types=1);
 
-namespace shoghicp\BigBrother\network\protocol\Play\Server;
+namespace shoghicp\BigBrother\utils;
 
-use shoghicp\BigBrother\network\OutboundPacket;
+class SkinUtils{
+	private $existSkin = false;
 
-class TitlePacket extends OutboundPacket{
-
-	const TYPE_SET_TITLE = 0;
-	const TYPE_SET_SUB_TITLE = 1;
-	const TYPE_SET_ACTION_BAR = 2;
-	const TYPE_SET_SETTINGS = 3;
-	const TYPE_HIDE = 4;
-	const TYPE_RESET = 5;
-
-	/** @var int */
-	public $actionID;
-	/** @var string|int[] */
-	public $data = null;
-
-	public function pid() : int{
-		return self::TITLE_PACKET;
-	}
-
-	protected function encode() : void{
-		$this->putVarInt($this->actionID);
-		switch($this->actionID){
-			case self::TYPE_SET_TITLE:
-			case self::TYPE_SET_SUB_TITLE:
-			case self::TYPE_SET_ACTION_BAR:
-				$this->putString($this->data);
-			break;
-			case self::TYPE_SET_SETTINGS:
-				$this->putInt($this->data[0]);
-				$this->putInt($this->data[1]);
-				$this->putInt($this->data[2]);
-			break;
+	public function __construct($binary){
+		$this->utils = new PNGUtils($binary);
+		if($binary !== ""){
+			$this->existSkin = true;
 		}
 	}
+
+	public function getSKinData() : string{
+		$data = "";
+		if($this->existSkin){
+			for($height = 0; $height < $this->utils->getHeight(); $height++){
+				for($width = 0; $width < $this->utils->getWidth(); $width++){
+					$rgbadata = $this->utils->getRGBA($height, $width);
+					$data .= chr($rgbadata[0]).chr($rgbadata[1]).chr($rgbadata[2]).chr($rgbadata[3]);
+				}
+			}
+		}else{
+			//TODO implement default skin
+			$data = str_repeat(" ", 64 * 32 * 4);//dummy data
+		}
+
+		return base64_encode($data);
+	}
+
 }

@@ -31,6 +31,7 @@ namespace shoghicp\BigBrother;
 
 use pocketmine\plugin\PluginBase;
 use pocketmine\network\mcpe\protocol\ProtocolInfo as Info;
+use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\block\Block;
 use pocketmine\block\Chest;
 use pocketmine\event\player\PlayerRespawnEvent;
@@ -72,89 +73,114 @@ class BigBrother extends PluginBase implements Listener{
 	 * @override
 	 */
 	public function onEnable(){
-		ConvertUtils::init();
-
-		$this->saveDefaultConfig();
-		$this->saveResource("server-icon.png", false);
-		$this->saveResource("steve.yml", false);
-		$this->saveResource("alex.yml", false);
-		$this->saveResource("openssl.cnf", false);
-		$this->reloadConfig();
-
-		$this->onlineMode = (bool) $this->getConfig()->get("online-mode");
-
-		if(is_file($composer = $this->getFile() . "/vendor/autoload.php")){
-			$this->getLogger()->info("Registering Composer autoloader...");
-			require_once($composer);
-		}else{
-			$this->getLogger()->critical("Composer autoloader not found");
-			$this->getLogger()->critical("Please initialize composer dependencies before running");
-			$this->getPluginLoader()->disablePlugin($this);
-			return;
-		}
-
-		$aes = new AES();
-		switch($aes->getEngine()){
-			case AES::ENGINE_OPENSSL:
-				$this->getLogger()->info("Use openssl as AES encryption engine.");
-			break;
-			case AES::ENGINE_MCRYPT:
-				$this->getLogger()->warning("Use obsolete mcrypt for AES encryption. Try to install openssl extension instead!!");
-			break;
-			case AES::ENGINE_INTERNAL:
-				$this->getLogger()->warning("Use phpseclib internal engine for AES encryption, this may impact on performance. To improve them, try to install openssl extension.");
-			break;
-		}
-
-		$this->rsa = new RSA();
-		switch(constant("CRYPT_RSA_MODE")){
-			case RSA::MODE_OPENSSL:
-				$this->rsa->configFile = $this->getDataFolder() . "openssl.cnf";
-				$this->getLogger()->info("Use openssl as RSA encryption engine.");
-			break;
-			case RSA::MODE_INTERNAL:
-				$this->getLogger()->info("Use phpseclib internal engine for RSA encryption.");
-			break;
-		}
-
-		if(!$this->getConfig()->exists("motd")){
-			$this->getLogger()->warning("No motd has been set. The server description will be empty.");
-			$this->getPluginLoader()->disablePlugin($this);
-			return;
-		}
-
-		if(Info::CURRENT_PROTOCOL === 137){
-			$this->translator = new Translator();
-
-			$this->getServer()->getPluginManager()->registerEvents($this, $this);
-
-			if($this->onlineMode){
-				$this->getLogger()->info("Server is being started in the background");
-				$this->getLogger()->info("Generating keypair");
-				$this->rsa->setPrivateKeyFormat(RSA::PRIVATE_FORMAT_PKCS1);
-				$this->rsa->setPublicKeyFormat(RSA::PUBLIC_FORMAT_PKCS8);
-				$this->rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
-				$keys = $this->rsa->createKey(1024);
-				$this->privateKey = $keys["privatekey"];
-				$this->publicKey = $keys["publickey"];
-				$this->rsa->loadKey($this->privateKey);
+		$enable = true;
+		foreach($this->getServer()->getNetwork()->getInterfaces() as $interface){
+			if($interface instanceof ProtocolInterface){
+				$enable = false;
 			}
+		}
 
-			$this->getLogger()->info("Starting Minecraft: PC server on ".($this->getIp() === "0.0.0.0" ? "*" : $this->getIp()).":".$this->getPort()." version ".ServerManager::VERSION);
+		if($enable){
+			if(Info::CURRENT_PROTOCOL === 223){
+				ConvertUtils::init();
 
-			$disable = true;
-			foreach($this->getServer()->getNetwork()->getInterfaces() as $interface){
-				if($interface instanceof ProtocolInterface){
-					$disable = false;
+				$this->saveDefaultConfig();
+				$this->saveResource("server-icon.png", false);
+				$this->saveResource("openssl.cnf", false);
+				$this->reloadConfig();
+
+				if(is_file($composer = $this->getFile() . "/vendor/autoload.php")){
+					$this->getLogger()->info("Registering Composer autoloader...");
+					require_once($composer);
+				}else{
+					$this->getLogger()->critical("Composer autoloader not found");
+					$this->getLogger()->critical("Please initialize composer dependencies before running");
+					$this->getPluginLoader()->disablePlugin($this);
+					return;
 				}
-			}
-			if($disable){
+
+				$this->getLogger()->info("OS: ".php_uname());
+				$this->getLogger()->info("PHP version: ".PHP_VERSION);
+
+				$this->getLogger()->info("PMMP version: ".\pocketmine\VERSION." ".\pocketmine\CODENAME);
+				$this->getLogger()->info("PMMP Server version: ".$this->getServer()->getVersion());
+				$this->getLogger()->info("PMMP API version: ".\pocketmine\API_VERSION);
+
+				if(!$this->isPhar() and is_dir($this->getDataFolder().".git")){
+					$cwd = getcwd();
+					chdir($this->getDataFolder());
+					@exec("git describe --tags --always --dirty", $revision, $retval);
+					if($retval == 0){
+						$this->getLogger()->info("BigBrother revision: ".$revision[0]);
+					}
+					chdir($cwd);
+				}
+
+				$aes = new AES();
+				switch($aes->getEngine()){
+					case AES::ENGINE_OPENSSL:
+						$this->getLogger()->info("Use openssl as AES encryption engine.");
+					break;
+					case AES::ENGINE_MCRYPT:
+						$this->getLogger()->warning("Use obsolete mcrypt for AES encryption. Try to install openssl extension instead!!");
+					break;
+					case AES::ENGINE_INTERNAL:
+						$this->getLogger()->warning("Use phpseclib internal engine for AES encryption, this may impact on performance. To improve them, try to install openssl extension.");
+					break;
+				}
+
+				$this->rsa = new RSA();
+				switch(constant("CRYPT_RSA_MODE")){
+					case RSA::MODE_OPENSSL:
+						$this->rsa->configFile = $this->getDataFolder() . "openssl.cnf";
+						$this->getLogger()->info("Use openssl as RSA encryption engine.");
+					break;
+					case RSA::MODE_INTERNAL:
+						$this->getLogger()->info("Use phpseclib internal engine for RSA encryption.");
+					break;
+				}
+
+				if($aes->getEngine() === AES::ENGINE_OPENSSL or constant("CRYPT_RSA_MODE") === RSA::MODE_OPENSSL){
+					ob_start();
+					@phpinfo();
+					preg_match_all('#OpenSSL (Header|Library) Version => (.*)#im', ob_get_contents() ?? "", $matches);
+					ob_end_clean();
+
+					foreach(array_map(null, $matches[1], $matches[2]) as $version){
+						$this->getLogger()->info("OpenSSL ".$version[0]." version: ".$version[1]);
+					}
+				}
+
+				if(!$this->getConfig()->exists("motd")){
+					$this->getLogger()->warning("No motd has been set. The server description will be empty.");
+					$this->getPluginLoader()->disablePlugin($this);
+					return;
+				}
+
+				$this->onlineMode = (bool) $this->getConfig()->get("online-mode");
+				if($this->onlineMode){
+					$this->getLogger()->info("Server is being started in the background");
+					$this->getLogger()->info("Generating keypair");
+					$this->rsa->setPrivateKeyFormat(RSA::PRIVATE_FORMAT_PKCS1);
+					$this->rsa->setPublicKeyFormat(RSA::PUBLIC_FORMAT_PKCS8);
+					$this->rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
+					$keys = $this->rsa->createKey(1024);
+					$this->privateKey = $keys["privatekey"];
+					$this->publicKey = $keys["publickey"];
+					$this->rsa->loadKey($this->privateKey);
+				}
+
+				$this->getLogger()->info("Starting Minecraft: PC server on ".($this->getIp() === "0.0.0.0" ? "*" : $this->getIp()).":".$this->getPort()." version ".ServerManager::VERSION);
+
+				$this->getServer()->getPluginManager()->registerEvents($this, $this);
+
+				$this->translator = new Translator();
 				$this->interface = new ProtocolInterface($this, $this->getServer(), $this->translator, $this->getConfig()->get("network-compression-threshold"));
 				$this->getServer()->getNetwork()->registerInterface($this->interface);
+			}else{
+				$this->getLogger()->critical("Couldn't find a protocol translator for #".Info::CURRENT_PROTOCOL .", disabling plugin");
+				$this->getPluginLoader()->disablePlugin($this);
 			}
-		}else{
-			$this->getLogger()->critical("Couldn't find a protocol translator for #".Info::CURRENT_PROTOCOL .", disabling plugin");
-			$this->getPluginLoader()->disablePlugin($this);
 		}
 	}
 
@@ -273,25 +299,31 @@ class BigBrother extends PluginBase implements Listener{
 
 	/**
 	 * @param string|null $message
-	 * @param string|null $source
 	 * @param int         $type
 	 * @param array|null  $parameters
 	 * @return string
 	 */
-	public static function toJSON(?string $message, ?string $source = "", int $type = 1, ?array $parameters = []) : string{
-		$message = $source.$message;
+	public static function toJSON(?string $message, int $type = 1, ?array $parameters = []) : string{
 		$result = json_decode(TextFormat::toJSON($message), true);
 
 		switch($type){
-			case 2:
+			case TextPacket::TYPE_TRANSLATION:
 				unset($result["text"]);
 				$message = TextFormat::clean($message);
 
 				if(substr($message, 0, 1) === "["){//chat.type.admin
 					$result["translate"] = "chat.type.admin";
+					$result["color"] = "gray";
+					$result["italic"] = true;
+					unset($result["extra"]);
 
 					$result["with"][] = ["text" => substr($message, 1, strpos($message, ":") - 1)];
-					$result["with"][] = ["translate" => preg_replace("/[^0-9a-zA-Z.]/", "", substr($message, strpos($message, "%") === false ? 0 : strpos($message, "%")))];
+
+					if($message === "[CONSOLE: Reload complete.]" or $message === "[CONSOLE: Reloading server...]"){//blame pmmp
+						$result["with"][] = ["translate" => substr(substr($message, strpos($message, ":") + 2), 0, - 1), "color" => "yellow"];
+					}else{
+						$result["with"][] = ["translate" => substr(substr($message, strpos($message, ":") + 2), 0, - 1)];
+					}
 
 					$with = &$result["with"][1];
 				}else{
@@ -308,10 +340,14 @@ class BigBrother extends PluginBase implements Listener{
 					}
 				}
 			break;
-			case 3:
-			case 4://Just to be sure
+			case TextPacket::TYPE_POPUP:
+			case TextPacket::TYPE_TIP://Just to be sure
 				if(isset($result["text"])){
-					$result["text"] = $message;
+					$result["text"] = str_replace("\n", "", $message);
+				}
+
+				if(isset($result["extra"])){
+					unset($result["extra"]);
 				}
 			break;
 		}

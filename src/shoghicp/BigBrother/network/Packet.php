@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace shoghicp\BigBrother\network;
 
 use pocketmine\item\Item;
-use pocketmine\nbt\NBT;
+use pocketmine\nbt\LittleEndianNBTStream;
 use shoghicp\BigBrother\utils\Binary;
 use shoghicp\BigBrother\utils\ConvertUtils;
 use shoghicp\BigBrother\utils\ComputerItem;
@@ -94,8 +94,8 @@ abstract class Packet extends \stdClass{
 			$damage = $this->getSignedShort();
 			$nbt = $this->get(true);
 
-			$nbt = ConvertUtils::convertNBTDataFromPCtoPE($nbt);
-			$item = new ComputerItem($itemId, $damage, $count, $nbt);
+			$itemnbt = ConvertUtils::convertNBTDataFromPCtoPE($nbt);
+			$item = new ComputerItem($itemId, $damage, $count, $itemnbt);
 
 			ConvertUtils::convertItemData(false, $item);
 
@@ -113,11 +113,14 @@ abstract class Packet extends \stdClass{
 			$this->putByte($item->getCount());
 			$this->putShort($item->getDamage());
 
-			$nbt = new NBT(NBT::LITTLE_ENDIAN);
-			$nbt->read($item->getCompoundTag());
-			$nbt = $nbt->getData();
+			if($item->hasCompoundTag()){
+				$nbt = new LittleEndianNBTStream();
+				$itemnbt = $nbt->read($item->getCompoundTag(), true);
 
-			$this->put(ConvertUtils::convertNBTDataFromPEtoPC($nbt));
+				$this->put(ConvertUtils::convertNBTDataFromPEtoPC($itemnbt));
+			}else{
+				$this->put("\x00");//TAG_End
+			}
 		}
 	}
 

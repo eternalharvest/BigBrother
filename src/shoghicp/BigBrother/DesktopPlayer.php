@@ -30,7 +30,6 @@ declare(strict_types=1);
 namespace shoghicp\BigBrother;
 
 use pocketmine\Player;
-use pocketmine\event\Timings;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\item\Item;
 use pocketmine\inventory\CraftingGrid;
@@ -46,6 +45,7 @@ use pocketmine\network\mcpe\protocol\BatchPacket;
 use pocketmine\network\SourceInterface;
 use pocketmine\level\Level;
 use pocketmine\level\format\Chunk;
+use pocketmine\timings\Timings;
 use pocketmine\utils\Utils;
 use pocketmine\utils\TextFormat;
 use shoghicp\BigBrother\network\Packet;
@@ -62,7 +62,10 @@ use shoghicp\BigBrother\network\protocol\Play\Server\UnlockRecipesPacket;
 use shoghicp\BigBrother\network\ProtocolInterface;
 use shoghicp\BigBrother\entity\ItemFrameBlockEntity;
 use shoghicp\BigBrother\utils\Binary;
+use shoghicp\BigBrother\utils\CapeUtils;
 use shoghicp\BigBrother\utils\InventoryUtils;
+use shoghicp\BigBrother\utils\RecipeUtils;
+use shoghicp\BigBrother\utils\SkinUtils;
 
 class DesktopPlayer extends Player{
 
@@ -87,13 +90,21 @@ class DesktopPlayer extends Player{
 	/** @var string[] */
 	private $bigBrother_entitylist = [];
 	/** @var InventoryUtils */
-	private $inventoryutils;
+	private $inventoryUtils;
+	/** @var RecipeUtils */
+	private $recipeUtils;
 	/** @var array */
 	private $bigBrother_clientSetting = [];
 	/** @var array */
 	private $bigBrother_pluginMessageList = [];
 	/** @var array */
 	private $bigBrother_breakPosition = [];
+	/** @var array */
+	private $bigBrother_bossBarData = [
+		"entityRuntimeId" => -1,
+		"uuid" => "",
+		"nameTag" => ""
+	];
 
 	/** @var ProtocolInterface */
 	protected $interface;
@@ -110,17 +121,25 @@ class DesktopPlayer extends Player{
 	public function __construct(SourceInterface $interface, string $clientID, string $address, int $port, BigBrother $plugin){
 		$this->plugin = $plugin;
 		$this->bigbrother_clientId = $clientID;
-		parent::__construct($interface, $clientID, $address, $port);
+		parent::__construct($interface, $address, $port);
 
 		$this->bigBrother_breakPosition = [new Vector3(0, 0, 0), 0];
-		$this->inventoryutils = new InventoryUtils($this);
+		$this->inventoryUtils = new InventoryUtils($this);
+		$this->recipeUtils = new RecipeUtils($this);
 	}
 
 	/**
 	 * @return InventoryUtils
 	 */
 	public function getInventoryUtils() : InventoryUtils{
-		return $this->inventoryutils;
+		return $this->inventoryUtils;
+	}
+
+	/**
+	 * @return RecipeUtils
+	 */
+	public function getRecipeUtils() : RecipeUtils{
+		return $this->recipeUtils;
 	}
 
 	/**
@@ -224,6 +243,24 @@ class DesktopPlayer extends Player{
 	}
 
 	/**
+	 * @param  string       $bossBardata
+	 * @return string|array
+	 */
+	public function bigBrother_getBossBarData(string $bossBarData = ""){
+		if($bossBarData === ""){
+			return $this->bigBrother_bossBarData;
+		}
+		return $this->bigBrother_bossBarData[$bossBarData];
+	}
+
+	/**
+	 * @param string $bossBardata
+	 */
+	public function bigBrother_setBossBarData(string $bossBarData, $data) : void{
+		$this->bigBrother_bossBarData[$bossBarData] = $data;
+	}
+
+	/**
 	 * @return int status
 	 */
 	public function bigBrother_getStatus() : int{
@@ -319,7 +356,7 @@ class DesktopPlayer extends Player{
 
 		if($grid->getDefaultSize() === 9){//Open Crafting Table
 			$pk = new ContainerOpenPacket();
-			$pk->windowId = 255;//Max WindowId
+			$pk->windowId = 127;//Max WindowId
 			$pk->type = WindowTypes::WORKBENCH;
 			$pk->x = 0;
 			$pk->y = 0;
@@ -327,6 +364,10 @@ class DesktopPlayer extends Player{
 
 			$this->dataPacket($pk);
 		}
+	}
+
+	public function setLocale(string $locale) : void{
+		$this->locale = $locale;
 	}
 
 	/**
@@ -377,8 +418,8 @@ class DesktopPlayer extends Player{
 	/**
 	 * @override
 	 */
-	public function onVerifyCompleted(LoginPacket $packet, bool $isValid, bool $isAuthenticated) : void{
-		parent::onVerifyCompleted($packet, true, true);
+	public function onVerifyCompleted(LoginPacket $packet, ?string $error, bool $signedByMojang) : void{
+		parent::onVerifyCompleted($packet, null, true);
 
 		$pk = new ResourcePackClientResponsePacket();
 		$pk->status = ResourcePackClientResponsePacket::STATUS_COMPLETED;
@@ -445,13 +486,23 @@ class DesktopPlayer extends Player{
 				$this->bigBrother_properties = $onlineModeData;
 			}
 
-			$skin = "";
-			$skindata = null;
 			foreach($this->bigBrother_properties as $property){
 				if($property["name"] === "textures"){
-					$skindata = json_decode(base64_decode($property["value"]), true);
-					if(isset($skindata["textures"]["SKIN"]["url"])){
-						$skin = $this->getSkinImage($skindata["textures"]["SKIN"]["url"]);
+					$textures = json_decode(base64_decode($property["value"]), true);
+
+					$model = false;
+					$skinimage = "";
+					if(isset($textures["textures"]["SKIN"])){
+						if(isset($textures["textures"]["SKIN"]["metadata"]["model"])){
+							$model = true;
+						}
+
+						$skinimage = file_get_contents($textures["textures"]["SKIN"]["url"]);
+					}
+
+					$capeimage = "";
+					if(isset($textures["textures"]["CAPE"])){
+						$capeimage = file_get_contents($textures["textures"]["CAPE"]["url"]);
 					}
 				}
 			}
@@ -461,25 +512,26 @@ class DesktopPlayer extends Player{
 			$pk->protocol = Info::CURRENT_PROTOCOL;
 			$pk->clientUUID = $this->bigBrother_formatedUUID;
 			$pk->clientId = crc32($this->bigbrother_clientId);
+			$pk->xuid = str_repeat("0", 16);
 			$pk->serverAddress = "127.0.0.1:25565";
-			$pk->clientData["SkinGeometryName"] = "";//TODO
+			$pk->locale = "en_US";
+			$pk->skipVerification = true;
 			$pk->clientData["SkinGeometry"] = "";//TODO
-			$pk->clientData["CapeData"] = "";//TODO
-			if($skin === ""){
-				if($this->plugin->getConfig()->get("skin-slim")){
-					$pk->clientData["SkinId"] = "Standard_Custom";
-				}else{
-					$pk->clientData["SkinId"] = "Standard_CustomSlim";
-				}
-				$pk->clientData["SkinData"] = base64_encode(file_get_contents($this->plugin->getDataFolder().$this->plugin->getConfig()->get("skin-yml")));
+
+			if($model){
+				$pk->clientData["SkinId"] = $this->bigBrother_formatedUUID."_CustomSlim";
+				$pk->clientData["SkinGeometryName"] = "geometry.humanoid.customSlim";
 			}else{
-				if($skindata !== null && !isset($skindata["textures"]["SKIN"]["metadata"]["model"])){
-					$pk->clientData["SkinId"] = "Standard_Custom";
-				}else{
-					$pk->clientData["SkinId"] = "Standard_CustomSlim";
-				}
-				$pk->clientData["SkinData"] = base64_encode($skin);
+				$pk->clientData["SkinId"] = $this->bigBrother_formatedUUID."_Custom";
+				$pk->clientData["SkinGeometryName"] = "geometry.humanoid.custom";
 			}
+
+			$skin = new SkinUtils($skinimage);
+			$pk->clientData["SkinData"] = $skin->getSkinData();
+
+			$cape = new CapeUtils($capeimage);
+			$pk->clientData["CapeData"] = $cape->getCapeData();
+
 			$pk->chainData = ["chain" => []];
 			$pk->clientDataJwt = "eyJ4NXUiOiJNSFl3RUFZSEtvWkl6ajBDQVFZRks0RUVBQ0lEWWdBRThFTGtpeHlMY3dsWnJ5VVFjdTFUdlBPbUkyQjd2WDgzbmRuV1JVYVhtNzR3RmZhNWZcL2x3UU5UZnJMVkhhMlBtZW5wR0k2SmhJTVVKYVdacmptTWo5ME5vS05GU05CdUtkbThyWWlYc2ZhejNLMzZ4XC8xVTI2SHBHMFp4S1wvVjFWIn0.W10.QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB";
 			$this->handleDataPacket($pk);
@@ -573,60 +625,7 @@ class DesktopPlayer extends Player{
 		}
 	}
 
-	/**
-	 * @param string $url
-	 * @return string sking image
-	 */
-	public function getSkinImage(string $url) : string{
-		if(extension_loaded("gd")){
-			$image = imagecreatefrompng($url);
 
-			if($image !== false){
-				$width = imagesx($image);
-				$height = imagesy($image);
-				$colors = [];
-				for($y = 0; $y < $height; $y++){
-					$y_array = [];
-					for($x = 0; $x < $width; $x++){
-						$rgb = imagecolorat($image, $x, $y);
-						$r = ($rgb >> 16) & 0xFF;
-						$g = ($rgb >> 8) & 0xFF;
-						$b = $rgb & 0xFF;
-						$alpha = imagecolorsforindex($image, $rgb)["alpha"];
-						$x_array = [$r, $g, $b, $alpha];
-						$y_array[] = $x_array;
-					}
-					$colors[] = $y_array;
-				}
-				$skin = "";
-				foreach($colors as $width){
-					foreach($width as $height){
-						$alpha = 0;
-						if($height[0] === 255 and $height[1] === 255 and $height[2] === 255){
-							$height[0] = 0;
-							$height[1] = 0;
-							$height[2] = 0;
-							if($height[3] === 127){
-								$alpha = 255;
-							}else{
-								$alpha = 0;
-							}
-						}else{
-							if($height[3] === 127){
-								$alpha = 0;
-							}else{
-								$alpha = 255;
-							}
-						}
-						$skin = $skin.chr($height[0]).chr($height[1]).chr($height[2]).chr($alpha);
-					}
-				}
-				imagedestroy($image);
-				return $skin;
-			}
-		}
-		return "";
-	}
 
 	/**
 	 * @param DataPacket $packet

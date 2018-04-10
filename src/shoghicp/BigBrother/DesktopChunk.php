@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace shoghicp\BigBrother;
 
 use pocketmine\block\Block;
-use pocketmine\level\format\io\LevelProvider;
+use pocketmine\level\Level;
 use shoghicp\BigBrother\utils\Binary;
 use shoghicp\BigBrother\utils\ConvertUtils;
 use shoghicp\BigBrother\entity\ItemFrameBlockEntity;
@@ -42,8 +42,8 @@ class DesktopChunk{
 	private $chunkX;
 	/** @var int */
 	private $chunkZ;
-	/** @var LevelProvider */
-	private $provider;
+	/** @var Level */
+	private $level;
 	/** @var bool */
 	private $groundUp;
 	/** @var int */
@@ -62,7 +62,7 @@ class DesktopChunk{
 		$this->player = $player;
 		$this->chunkX = $chunkX;
 		$this->chunkZ = $chunkZ;
-		$this->provider = $player->getLevel()->getProvider();
+		$this->level = $player->getLevel();
 		$this->groundUp = true;
 		$this->bitMap = 0;
 
@@ -70,7 +70,7 @@ class DesktopChunk{
 	}
 
 	public function generateChunk() : void{
-		$chunk = $this->provider->getChunk($this->chunkX, $this->chunkZ, false);
+		$chunk = $this->level->getChunk($this->chunkX, $this->chunkZ, false);
 		$this->biomes = $chunk->getBiomeIdArray();
 
 		$payload = "";
@@ -85,8 +85,6 @@ class DesktopChunk{
 			$bitsperblock = 8;
 
 			$chunkdata = "";
-			$blocklightdata = "";
-			$skylightdata = "";
 			for($y = 0; $y < 16; ++$y){
 				for($z = 0; $z < 16; ++$z){
 
@@ -103,22 +101,30 @@ class DesktopChunk{
 							$block = (int) ($blockid << 4) | $blockdata;
 						}
 
-						if(($key = array_search($block, $palette, true)) !== false){
-							$data .= chr($key);//bit
-						}else{
+						if(($key = array_search($block, $palette, true)) === false){
 							$key = count($palette);
 							$palette[$key] = $block;
-
-							$data .= chr($key);//bit
 						}
+						$data .= chr($key);//bit
 
 						if($x === 7 or $x === 15){//Reset ChunkData
 							$chunkdata .= strrev($data);
-							$blocklightdata .= str_repeat("\xff", 4);
-							$skylightdata .= str_repeat("\xff", 4);
-							$blocklight = "";
 							$data = "";
 						}
+					}
+				}
+			}
+
+			$blocklightdata = "";
+			$skylightdata = "";
+			for($y = 0; $y < 16; ++$y){
+				for($z = 0; $z < 16; ++$z){
+					for($x = 0; $x < 16; $x += 2){
+						$blocklight = $subChunk->getBlockLight($x, $y, $z) | ($subChunk->getBlockLight($x + 1, $y, $z) << 4);
+						$skylight = $subChunk->getBlockSkyLight($x, $y, $z) | ($subChunk->getBlockSkyLight($x + 1, $y, $z) << 4);
+
+						$blocklightdata .= chr($blocklight);
+						$skylightdata .= chr($skylight);
 					}
 				}
 			}
