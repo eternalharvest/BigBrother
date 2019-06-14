@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class EntityPacket extends OutboundPacket{
 
+	const PID = self::ENTITY_PACKET;
+
 	/** @var int */
 	public $eid;
-
-	public function pid() : int{
-		return self::ENTITY_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

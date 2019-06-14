@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class TabCompletePacket extends InboundPacket{
 
+	const PID = self::TAB_COMPLETE_PACKET;
+
 	/** @var string */
 	public $text;
 	/** @var bool */
@@ -45,10 +47,6 @@ class TabCompletePacket extends InboundPacket{
 	public $y;
 	/** @var int */
 	public $z;
-
-	public function pid() : int{
-		return self::TAB_COMPLETE_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->text = $this->getString();

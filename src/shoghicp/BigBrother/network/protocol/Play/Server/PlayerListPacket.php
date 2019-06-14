@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class PlayerListPacket extends OutboundPacket{
 
+	const PID = self::PLAYER_LIST_PACKET;
+
 	const TYPE_ADD = 0;
 	const TYPE_UPDATE_NAME = 3;
 	const TYPE_REMOVE = 4;
@@ -41,10 +43,6 @@ class PlayerListPacket extends OutboundPacket{
 	public $actionID;
 	/** @var array */
 	public $players = [];
-
-	public function pid() : int{
-		return self::PLAYER_LIST_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->actionID);

@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class EffectPacket extends OutboundPacket{
 
+	const PID = self::EFFECT_PACKET;
+
 	/** @var int */
 	public $effectId;
 	/** @var int */
@@ -45,10 +47,6 @@ class EffectPacket extends OutboundPacket{
 	public $data;
 	/** @var bool */
 	public $disableRelativeVolume;
-
-	public function pid() : int{
-		return self::EFFECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putInt($this->effectId);

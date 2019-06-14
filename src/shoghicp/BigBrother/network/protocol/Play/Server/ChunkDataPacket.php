@@ -39,6 +39,8 @@ use pocketmine\nbt\tag\ShortTag;
 
 class ChunkDataPacket extends OutboundPacket{
 
+	const PID = self::CHUNK_DATA_PACKET;
+
 	/** @var int */
 	public $chunkX;
 	/** @var int */
@@ -53,10 +55,6 @@ class ChunkDataPacket extends OutboundPacket{
 	public $biomes;
 	/** @var array */
 	public $blockEntities = [];
-
-	public function pid() : int{
-		return self::CHUNK_DATA_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putInt($this->chunkX);

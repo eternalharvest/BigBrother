@@ -34,14 +34,12 @@ use pocketmine\item\Item;
 
 class WindowItemsPacket extends OutboundPacket{
 
+	const PID = self::WINDOW_ITEMS_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var Item[] */
 	public $items = [];
-
-	public function pid() : int{
-		return self::WINDOW_ITEMS_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->windowID);

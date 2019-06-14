@@ -34,14 +34,12 @@ use shoghicp\BigBrother\utils\Binary;
 
 class EntityMetadataPacket extends OutboundPacket{
 
+	const PID = self::ENTITY_METADATA_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var array */
 	public $metadata;
-
-	public function pid() : int{
-		return self::ENTITY_METADATA_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

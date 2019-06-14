@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\Packet;
 
 class PingPacket extends Packet{
 
+	const PID = 0x01;
+
 	/** @var int */
 	public $time;
-
-	public function pid() : int{
-		return 0x01;
-	}
 
 	protected function encode() : void{
 		$this->putLong($this->time);

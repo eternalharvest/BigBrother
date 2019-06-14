@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class ChangeGameStatePacket extends OutboundPacket{
 
+	const PID = self::CHANGE_GAME_STATE_PACKET;
+
 	/** @var int */
 	public $reason;
 	/** @var float */
 	public $value;
-
-	public function pid() : int{
-		return self::CHANGE_GAME_STATE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->reason);

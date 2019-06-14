@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class UpdateSignPacket extends InboundPacket{
 
+	const PID = self::UPDATE_SIGN_PACKET;
+
 	/** @var int */
 	public $x;
 	/** @var int */
@@ -47,10 +49,6 @@ class UpdateSignPacket extends InboundPacket{
 	public $line3;
 	/** @var string */
 	public $line4;
-
-	public function pid() : int{
-		return self::UPDATE_SIGN_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->getPosition($this->x, $this->y, $this->z);

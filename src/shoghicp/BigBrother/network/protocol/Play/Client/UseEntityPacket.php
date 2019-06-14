@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class UseEntityPacket extends InboundPacket{
 
+	const PID = self::USE_ENTITY_PACKET;
+
 	const INTERACT    = 0;
 	const ATTACK      = 1;
 	const INTERACT_AT = 2;
@@ -51,10 +53,6 @@ class UseEntityPacket extends InboundPacket{
 
 	/** @var int */
 	public $hand;
-
-	public function pid() : int{
-		return self::USE_ENTITY_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->target = $this->getVarInt();

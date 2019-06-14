@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class ConfirmTransactionPacket extends InboundPacket{
 
+	const PID = self::CONFIRM_TRANSACTION_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var int */
 	public $actionNumber;
 	/** @var bool */
 	public $accepted;
-
-	public function pid() : int{
-		return self::CONFIRM_TRANSACTION_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->windowID = $this->getSignedByte();

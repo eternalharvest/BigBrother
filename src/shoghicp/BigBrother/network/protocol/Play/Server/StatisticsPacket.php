@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class StatisticsPacket extends OutboundPacket{
 
+	const PID = self::STATISTICS_PACKET;
+
 	/** @var int */
 	public $count;
 	/** @var array */
 	public $statistic = [];
-
-	public function pid() : int{
-		return self::STATISTICS_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->count);

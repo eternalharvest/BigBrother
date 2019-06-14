@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class OpenWindowPacket extends OutboundPacket{
 
+	const PID = self::OPEN_WINDOW_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var string */
@@ -43,10 +45,6 @@ class OpenWindowPacket extends OutboundPacket{
 	public $slots;
 	/** @var int */
 	public $entityId = -1;
-
-	public function pid() : int{
-		return self::OPEN_WINDOW_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->windowID);

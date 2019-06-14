@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class PlayerAbilitiesPacket extends OutboundPacket{
 
+	const PID = self::PLAYER_ABILITIES_PACKET;
+
 	/** @var bool */
 	public $damageDisabled;
 	/** @var bool */
@@ -46,10 +48,6 @@ class PlayerAbilitiesPacket extends OutboundPacket{
 	public $flyingSpeed;
 	/** @var float */
 	public $walkingSpeed;
-
-	public function pid() : int{
-		return self::PLAYER_ABILITIES_PACKET;
-	}
 
 	protected function encode() : void{
 		$flags = 0;

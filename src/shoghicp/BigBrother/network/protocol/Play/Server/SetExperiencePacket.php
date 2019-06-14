@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SetExperiencePacket extends OutboundPacket{
 
+	const PID = self::SET_EXPERIENCE_PACKET;
+
 	/** @var float */
 	public $experience;
 	/** @var int */
 	public $level;
 	/** @var int */
 	public $totalexperience;
-
-	public function pid() : int{
-		return self::SET_EXPERIENCE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putFloat($this->experience);

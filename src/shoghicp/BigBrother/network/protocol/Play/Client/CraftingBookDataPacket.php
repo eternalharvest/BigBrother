@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class CraftingBookDataPacket extends InboundPacket{
 
+	const PID = self::CRAFTING_BOOK_DATA_PACKET;
+
 	/** @var int */
 	public $type;
 	/** @var int */
@@ -41,10 +43,6 @@ class CraftingBookDataPacket extends InboundPacket{
 	public $isCraftingBookOpen = false;
 	/** @var bool */
 	public $isFilteringCraftable = false;
-
-	public function pid() : int{
-		return self::CRAFTING_BOOK_DATA_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->type = $this->getVarInt();

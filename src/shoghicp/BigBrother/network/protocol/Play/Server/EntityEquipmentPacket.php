@@ -34,16 +34,14 @@ use pocketmine\item\Item;
 
 class EntityEquipmentPacket extends OutboundPacket{
 
+	const PID = self::ENTITY_EQUIPMENT_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
 	public $slot;
 	/** @var Item */
 	public $item;
-
-	public function pid() : int{
-		return self::ENTITY_EQUIPMENT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

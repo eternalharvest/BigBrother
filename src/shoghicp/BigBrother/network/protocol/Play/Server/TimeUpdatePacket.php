@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class TimeUpdatePacket extends OutboundPacket{
 
+	const PID = self::TIME_UPDATE_PACKET;
+
 	/** @var int */
 	public $age;
 	/** @var int */
 	public $time;
-
-	public function pid() : int{
-		return self::TIME_UPDATE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putLong($this->age);

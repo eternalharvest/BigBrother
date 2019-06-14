@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class ServerDifficultyPacket extends OutboundPacket{
 
+	const PID = self::SERVER_DIFFICULTY_PACKET;
+
 	/** @var int */
 	public $difficulty;
-
-	public function pid() : int{
-		return self::SERVER_DIFFICULTY_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->difficulty);

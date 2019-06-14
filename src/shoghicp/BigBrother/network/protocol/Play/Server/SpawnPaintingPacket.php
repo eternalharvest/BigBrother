@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SpawnPaintingPacket extends OutboundPacket{
 
+	const PID = self::SPAWN_PAINTING_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var string */
@@ -48,11 +50,6 @@ class SpawnPaintingPacket extends OutboundPacket{
 	/** @var int */
 	public $direction;
 	
-
-	public function pid() : int{
-		return self::SPAWN_PAINTING_PACKET;
-	}
-
 	protected function encode() : void{
 		$this->putVarInt($this->eid);
 		$this->put($this->uuid);

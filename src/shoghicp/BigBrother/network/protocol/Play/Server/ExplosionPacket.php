@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class ExplosionPacket extends OutboundPacket{
 
+	const PID = self::EXPLOSION_PACKET;
+
 	/** @var float */
 	public $x;
 	/** @var float */
@@ -49,10 +51,6 @@ class ExplosionPacket extends OutboundPacket{
 	public $motionY;
 	/** @var float */
 	public $motionZ;
-
-	public function pid() : int{
-		return self::EXPLOSION_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putFloat($this->x);

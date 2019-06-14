@@ -34,6 +34,8 @@ use shoghicp\BigBrother\utils\Binary;
 
 class SpawnPlayerPacket extends OutboundPacket{
 
+	const PID = self::SPAWN_PLAYER_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var string */
@@ -50,10 +52,6 @@ class SpawnPlayerPacket extends OutboundPacket{
 	public $pitch;
 	/** @var array */
 	public $metadata;
-
-	public function pid() : int{
-		return self::SPAWN_PLAYER_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

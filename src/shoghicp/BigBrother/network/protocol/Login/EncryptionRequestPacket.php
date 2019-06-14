@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class EncryptionRequestPacket extends OutboundPacket{
 
+	const PID = self::ENCRYPTION_REQUEST_PACKET;
+
 	/** @var string */
 	public $serverID;
 	/** @var string */
 	public $publicKey;
 	/** @var string */
 	public $verifyToken;
-
-	public function pid() : int{
-		return self::ENCRYPTION_REQUEST_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putString($this->serverID);

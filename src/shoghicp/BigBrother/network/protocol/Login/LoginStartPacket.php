@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class LoginStartPacket extends InboundPacket{
 
+	const PID = self::LOGIN_START_PACKET;
+
 	/** @var string */
 	public $name;
-
-	public function pid() : int{
-		return self::LOGIN_START_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->name = $this->getString();

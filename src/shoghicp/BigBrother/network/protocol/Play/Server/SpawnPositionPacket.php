@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SpawnPositionPacket extends OutboundPacket{
 
+	const PID = self::SPAWN_POSITION_PACKET;
+
 	/** @var int */
 	public $spawnX;
 	/** @var int */
 	public $spawnY;
 	/** @var int */
 	public $spawnZ;
-
-	public function pid() : int{
-		return self::SPAWN_POSITION_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putPosition($this->spawnX, $this->spawnY, $this->spawnZ);

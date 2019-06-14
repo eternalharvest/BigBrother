@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerPositionAndLookPacket extends InboundPacket{
 
+	const PID = self::PLAYER_POSITION_AND_LOOK_PACKET;
+
 	/** @var float */
 	public $x;
 	/** @var float */
@@ -45,10 +47,6 @@ class PlayerPositionAndLookPacket extends InboundPacket{
 	public $pitch;
 	/** @var bool */
 	public $onGround;
-
-	public function pid() : int{
-		return self::PLAYER_POSITION_AND_LOOK_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->x = $this->getDouble();

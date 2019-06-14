@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class TabCompletePacket extends OutboundPacket{
 
+	const PID = self::TAB_COMPLETE_PACKET;
+
 	/** @var string[] */
 	public $matches = [];
-
-	public function pid() : int{
-		return self::TAB_COMPLETE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt(count($this->matches));

@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class WindowPropertyPacket extends OutboundPacket{
 
+	const PID = self::WINDOW_PROPERTY_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var int */
 	public $property;
 	/** @var int */
 	public $value;
-
-	public function pid() : int{
-		return self::WINDOW_PROPERTY_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->windowID);

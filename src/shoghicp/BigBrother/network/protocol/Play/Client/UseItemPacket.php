@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class UseItemPacket extends InboundPacket{
 
+	const PID = self::USE_ITEM_PACKET;
+
 	/** @var int */
 	public $hand;
-
-	public function pid() : int{
-		return self::USE_ITEM_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->hand = $this->getVarInt();

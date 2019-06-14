@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class TitlePacket extends OutboundPacket{
 
+	const PID = self::TITLE_PACKET;
+
 	const TYPE_SET_TITLE = 0;
 	const TYPE_SET_SUB_TITLE = 1;
 	const TYPE_SET_ACTION_BAR = 2;
@@ -44,10 +46,6 @@ class TitlePacket extends OutboundPacket{
 	public $actionID;
 	/** @var string|int[] */
 	public $data = null;
-
-	public function pid() : int{
-		return self::TITLE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->actionID);

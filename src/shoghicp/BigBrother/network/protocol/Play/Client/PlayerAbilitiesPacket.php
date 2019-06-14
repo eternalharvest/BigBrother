@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerAbilitiesPacket extends InboundPacket{
 
+	const PID = self::PLAYER_ABILITIES_PACKET;
+
 	/** @var bool */
 	public $damageDisabled = false;
 	/** @var bool */
@@ -46,10 +48,6 @@ class PlayerAbilitiesPacket extends InboundPacket{
 	public $flyingSpeed;
 	/** @var float */
 	public $walkingSpeed;
-
-	public function pid() : int{
-		return self::PLAYER_ABILITIES_PACKET;
-	}
 
 	protected function decode() : void{
 		$flags = $this->getSignedByte();

@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class EntityHeadLookPacket extends OutboundPacket{
 
+	const PID = self::ENTITY_HEAD_LOOK_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
 	public $yaw;
-
-	public function pid() : int{
-		return self::ENTITY_HEAD_LOOK_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

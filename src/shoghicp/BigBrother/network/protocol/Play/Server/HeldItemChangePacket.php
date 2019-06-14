@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class HeldItemChangePacket extends OutboundPacket{
 
+	const PID = self::HELD_ITEM_CHANGE_PACKET;
+
 	/** @var int */
 	public $selectedSlot;
-
-	public function pid() : int{
-		return self::HELD_ITEM_CHANGE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->selectedSlot);

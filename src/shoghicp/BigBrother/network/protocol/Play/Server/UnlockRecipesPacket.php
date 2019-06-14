@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class UnlockRecipesPacket extends OutboundPacket{
 
+	const PID = self::UNLOCK_RECIPES_PACKET;
+
 	/** @var int */
 	public $actionID;
 	/** @var bool */
@@ -43,10 +45,6 @@ class UnlockRecipesPacket extends OutboundPacket{
 	public $recipes = [];
 	/** @var int[] */
 	public $extraRecipes = [];
-
-	public function pid() : int{
-		return self::UNLOCK_RECIPES_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->actionID);

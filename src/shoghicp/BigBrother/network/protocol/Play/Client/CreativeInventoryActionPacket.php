@@ -34,14 +34,12 @@ use pocketmine\item\Item;
 
 class CreativeInventoryActionPacket extends InboundPacket{
 
+	const PID = self::CREATIVE_INVENTORY_ACTION_PACKET;
+
 	/** @var int */
 	public $slot;
 	/** @var Item */
 	public $item;
-
-	public function pid() : int{
-		return self::CREATIVE_INVENTORY_ACTION_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->slot = $this->getSignedShort();

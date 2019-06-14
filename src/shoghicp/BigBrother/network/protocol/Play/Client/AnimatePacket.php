@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class AnimatePacket extends InboundPacket{
 
+	const PID = self::ANIMATE_PACKET;
+
 	/** @var int  */
 	public $hand;
-
-	public function pid() : int{
-		return self::ANIMATE_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->hand = $this->getVarInt();

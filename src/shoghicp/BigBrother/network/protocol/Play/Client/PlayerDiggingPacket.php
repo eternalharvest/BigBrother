@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerDiggingPacket extends InboundPacket{
 
+	const PID = self::PLAYER_DIGGING_PACKET;
+
 	/** @var int */
 	public $status;
 	/** @var int */
@@ -43,10 +45,6 @@ class PlayerDiggingPacket extends InboundPacket{
 	public $z;
 	/** @var int */
 	public $face;
-
-	public function pid() : int{
-		return self::PLAYER_DIGGING_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->status = $this->getVarInt();

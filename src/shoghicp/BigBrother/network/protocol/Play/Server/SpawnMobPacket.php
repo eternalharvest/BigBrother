@@ -34,6 +34,8 @@ use shoghicp\BigBrother\utils\Binary;
 
 class SpawnMobPacket extends OutboundPacket{
 
+	const PID = self::SPAWN_MOB_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var string */
@@ -60,10 +62,6 @@ class SpawnMobPacket extends OutboundPacket{
 	public $velocityZ;
 	/** @var array */
 	public $metadata;
-
-	public function pid() : int{
-		return self::SPAWN_MOB_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerPacket extends InboundPacket{
 
+	const PID = self::PLAYER_PACKET;
+
 	/** @var bool */
 	public $onGround;
-
-	public function pid() : int{
-		return self::PLAYER_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->onGround = $this->getBool();

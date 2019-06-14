@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class ChatPacket extends InboundPacket{
 
+	const PID = self::CHAT_PACKET;
+
 	/** @var string */
 	public $message;
-
-	public function pid() : int{
-		return self::CHAT_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->message = $this->getString();

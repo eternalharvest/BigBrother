@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class EntityVelocityPacket extends OutboundPacket{
 
+	const PID = self::ENTITY_VELOCITY_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var float */
@@ -41,10 +43,6 @@ class EntityVelocityPacket extends OutboundPacket{
 	public $velocityY;
 	/** @var float */
 	public $velocityZ;
-
-	public function pid() : int{
-		return self::ENTITY_VELOCITY_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

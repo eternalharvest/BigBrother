@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class AdvancementsPacket extends OutboundPacket{
 
+	const PID = self::ADVANCEMENTS_PACKET;
+
 	/** @var bool */
 	public $doClear = false;
 	/** @var array */
@@ -41,10 +43,6 @@ class AdvancementsPacket extends OutboundPacket{
 	public $identifiers = [];
 	/** @var array */
 	public $progress = [];
-
-	public function pid() : int{
-		return self::ADVANCEMENTS_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putBool($this->doClear);

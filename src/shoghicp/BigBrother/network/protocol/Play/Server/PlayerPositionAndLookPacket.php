@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class PlayerPositionAndLookPacket extends OutboundPacket{
 
+	const PID = self::PLAYER_POSITION_AND_LOOK_PACKET;
+
 	/** @var float */
 	public $x;
 	/** @var float */
@@ -47,10 +49,6 @@ class PlayerPositionAndLookPacket extends OutboundPacket{
 	public $flags = 0;
 	/** @var int */
 	public $teleportId = 0;
-
-	public function pid() : int{
-		return self::PLAYER_POSITION_AND_LOOK_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putDouble($this->x);

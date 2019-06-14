@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class CloseWindowPacket extends OutboundPacket{
 
+	const PID = self::CLOSE_WINDOW_PACKET;
+
 	/** @var int */
 	public $windowID;
-
-	public function pid() : int{
-		return self::CLOSE_WINDOW_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->windowID);

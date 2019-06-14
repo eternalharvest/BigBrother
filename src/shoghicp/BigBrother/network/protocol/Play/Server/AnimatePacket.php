@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class AnimatePacket extends OutboundPacket{
 
+	const PID = self::ANIMATE_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
 	public $actionID;
-
-	public function pid() : int{
-		return self::ANIMATE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

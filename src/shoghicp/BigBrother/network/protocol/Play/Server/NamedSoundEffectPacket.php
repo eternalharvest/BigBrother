@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class NamedSoundEffectPacket extends OutboundPacket{
 
+	const PID = self::NAMED_SOUND_EFFECT_PACKET;
+
 	/** @var string */
 	public $name;
 	/** @var int */
@@ -47,10 +49,6 @@ class NamedSoundEffectPacket extends OutboundPacket{
 	public $volume;
 	/** @var float */
 	public $pitch;
-
-	public function pid() : int{
-		return self::NAMED_SOUND_EFFECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putString($this->name);

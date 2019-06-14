@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class UpdateHealthPacket extends OutboundPacket{
 
+	const PID = self::UPDATE_HEALTH_PACKET;
+
 	/** @var float */
 	public $health;
 	/** @var int */
 	public $food;
 	/** @var float */
 	public $saturation;
-
-	public function pid() : int{
-		return self::UPDATE_HEALTH_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putFloat($this->health);

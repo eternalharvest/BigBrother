@@ -32,6 +32,9 @@ namespace shoghicp\BigBrother\network\protocol\Play\Server;
 use shoghicp\BigBrother\network\OutboundPacket;
 
 class EntityTeleportPacket extends OutboundPacket{
+
+	const PID = self::ENTITY_TELEPORT_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var float */
@@ -46,10 +49,6 @@ class EntityTeleportPacket extends OutboundPacket{
 	public $pitch;
 	/** @var bool */
 	public $onGround = true;
-
-	public function pid() : int{
-		return self::ENTITY_TELEPORT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

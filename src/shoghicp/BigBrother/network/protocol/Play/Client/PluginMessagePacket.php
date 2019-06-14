@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PluginMessagePacket extends InboundPacket{
 
+	const PID = self::PLUGIN_MESSAGE_PACKET;
+
 	/** @var string */
 	public $channel;
 	/** @var string[] */
 	public $data = [];
-
-	public function pid() : int{
-		return self::PLUGIN_MESSAGE_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->channel = $this->getString();

@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class EntityEffectPacket extends OutboundPacket{
 
+	const PID = self::ENTITY_EFFECT_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
@@ -43,10 +45,6 @@ class EntityEffectPacket extends OutboundPacket{
 	public $duration;
 	/** @var int */
 	public $flags;
-
-	public function pid() : int{
-		return self::ENTITY_EFFECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

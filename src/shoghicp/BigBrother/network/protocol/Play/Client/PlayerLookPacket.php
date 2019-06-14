@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerLookPacket extends InboundPacket{
 
+	const PID = self::PLAYER_LOOK_PACKET;
+
 	/** @var float */
 	public $yaw;
 	/** @var float */
 	public $pitch;
 	/** @var bool */
 	public $onGround;
-
-	public function pid() : int{
-		return self::PLAYER_LOOK_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->yaw = $this->getFloat();

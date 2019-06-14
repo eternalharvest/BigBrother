@@ -35,6 +35,8 @@ use pocketmine\nbt\tag\NamedTag;
 
 class UpdateBlockEntityPacket extends OutboundPacket{
 
+	const PID = self::UPDATE_BLOCK_ENTITY_PACKET;
+
 	/** @var int */
 	public $x;
 	/** @var int */
@@ -45,10 +47,6 @@ class UpdateBlockEntityPacket extends OutboundPacket{
 	public $actionID;
 	/** @var NamedTag */
 	public $namedtag;
-
-	public function pid() : int{
-		return self::UPDATE_BLOCK_ENTITY_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putPosition($this->x, $this->y, $this->z);

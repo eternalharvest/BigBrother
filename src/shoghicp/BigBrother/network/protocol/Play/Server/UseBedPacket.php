@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class UseBedPacket extends OutboundPacket{
 
+	const PID = self::USE_BED_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
@@ -41,10 +43,6 @@ class UseBedPacket extends OutboundPacket{
 	public $bedY;
 	/** @var int */
 	public $bedZ;
-
-	public function pid() : int{
-		return self::USE_BED_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class BossBarPacket extends OutboundPacket{
 
+	const PID = self::BOSS_BAR_PACKET;
+
 	const TYPE_ADD = 0;
 	const TYPE_REMOVE = 1;
 	const TYPE_UPDATE_HEALTH = 2;
@@ -77,10 +79,6 @@ class BossBarPacket extends OutboundPacket{
 	public $division = self::DIVISION_ZERO;
 	/** @var int */
 	public $flags = 0;
-
-	public function pid() : int{
-		return self::BOSS_BAR_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->put($this->uuid);

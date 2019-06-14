@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class CollectItemPacket extends OutboundPacket{
 
+	const PID = self::COLLECT_ITEM_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
 	public $target;
 	/** @var int */
 	public $itemCount;
-
-	public function pid() : int{
-		return self::COLLECT_ITEM_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->target);

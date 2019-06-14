@@ -36,6 +36,8 @@ use shoghicp\BigBrother\utils\ComputerItem;
 
 abstract class Packet extends \stdClass{
 
+	const PID = -1;
+
 	/** @var string */
 	protected $buffer;
 	/** @var int */
@@ -226,7 +228,9 @@ abstract class Packet extends \stdClass{
 		$this->buffer .= Binary::writeComputerVarInt($v);
 	}
 
-	public abstract function pid() : int;
+	public function pid() : int{
+		return get_class($this)::PID;
+	}
 
 	protected abstract function encode() : void;
 

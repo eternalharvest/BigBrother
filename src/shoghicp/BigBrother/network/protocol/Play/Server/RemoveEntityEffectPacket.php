@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class RemoveEntityEffectPacket extends OutboundPacket{
 
+	const PID = self::REMOVE_ENTITY_EFFECT_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
 	public $effectId;
-
-	public function pid() : int{
-		return self::REMOVE_ENTITY_EFFECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

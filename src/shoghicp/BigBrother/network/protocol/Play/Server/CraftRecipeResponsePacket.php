@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class CraftRecipeResponsePacket extends OutboundPacket{
 
+	const PID = self::CRAFT_RECIPE_RESPONSE_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var int */
 	public $recipeId = -1;
-
-	public function pid() : int{
-		return self::CRAFT_RECIPE_RESPONSE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->windowID);

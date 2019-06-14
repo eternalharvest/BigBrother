@@ -34,6 +34,8 @@ use pocketmine\item\Item;
 
 class ClickWindowPacket extends InboundPacket{
 
+	const PID = self::CLICK_WINDOW_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var int */
@@ -46,10 +48,6 @@ class ClickWindowPacket extends InboundPacket{
 	public $mode;
 	/** @var Item */
 	public $clickedItem;
-
-	public function pid() : int{
-		return self::CLICK_WINDOW_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->windowID = $this->getByte();

@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class DestroyEntitiesPacket extends OutboundPacket{
 
+	const PID = self::DESTROY_ENTITIES_PACKET;
+
 	/** @var int[] */
 	public $ids = [];
-
-	public function pid() : int{
-		return self::DESTROY_ENTITIES_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt(count($this->ids));

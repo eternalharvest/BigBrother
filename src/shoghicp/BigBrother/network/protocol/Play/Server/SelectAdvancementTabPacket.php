@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SelectAdvancementTabPacket extends OutboundPacket{
 
+	const PID = self::SELECT_ADVANCEMENT_TAB_PACKET;
+
 	/** @var bool */
 	public $hasTab = false;
 	/** @var string */
 	public $tabId = "";
-
-	public function pid() : int{
-		return self::SELECT_ADVANCEMENT_TAB_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putBool($this->hasTab);

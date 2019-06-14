@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SpawnExperienceOrbPacket extends OutboundPacket{
 
+	const PID = self::SPAWN_EXPERIENCE_ORB_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var float */
@@ -43,10 +45,6 @@ class SpawnExperienceOrbPacket extends OutboundPacket{
 	public $z;
 	/** @var int */
 	public $count;
-
-	public function pid() : int{
-		return self::SPAWN_EXPERIENCE_ORB_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

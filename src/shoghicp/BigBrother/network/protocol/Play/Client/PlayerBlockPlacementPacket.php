@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerBlockPlacementPacket extends InboundPacket{
 
+	const PID = self::PLAYER_BLOCK_PLACEMENT_PACKET;
+
 	/** @var int */
 	public $x;
 	/** @var int */
@@ -49,10 +51,6 @@ class PlayerBlockPlacementPacket extends InboundPacket{
 	public $cursorY;
 	/** @var float */
 	public $cursorZ;
-
-	public function pid() : int{
-		return self::PLAYER_BLOCK_PLACEMENT_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->getPosition($this->x, $this->y, $this->z);

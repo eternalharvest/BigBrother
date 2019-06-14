@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class TeleportConfirmPacket extends InboundPacket{
 
+	const PID = self::TELEPORT_CONFIRM_PACKET;
+
 	/** @var int */
 	public $teleportId;
-
-	public function pid() : int{
-		return self::TELEPORT_CONFIRM_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->teleportId = $this->getVarInt();

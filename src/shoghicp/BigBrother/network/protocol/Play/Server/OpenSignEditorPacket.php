@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class OpenSignEditorPacket extends OutboundPacket{
 
+	const PID = self::OPEN_SIGN_EDITOR_PACKET;
+
 	/** @var int */
 	public $x;
 	/** @var int */
 	public $y;
 	/** @var int */
 	public $z;
-
-	public function pid() : int{
-		return self::OPEN_SIGN_EDITOR_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putPosition($this->x, $this->y, $this->z);

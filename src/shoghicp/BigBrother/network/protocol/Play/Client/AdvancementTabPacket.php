@@ -33,13 +33,11 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class AdvancementTabPacket extends InboundPacket{
 
+	const PID = self::ADVANCEMENT_TAB_PACKET;
+
 	/** @var int  */
 	public $status;
 	public $tabId;
-
-	public function pid() : int{
-		return self::ADVANCEMENT_TAB_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->status = $this->getVarInt();

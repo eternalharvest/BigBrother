@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class CraftRecipeRequestPacket extends InboundPacket{
 
+	const PID = self::CRAFT_RECIPE_REQUEST_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var int */
 	public $recipeId = -1;
 	/** @var bool */
 	public $isMakeAll = false;
-
-	public function pid() : int{
-		return self::CRAFT_RECIPE_REQUEST_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->windowID = $this->getSignedByte();

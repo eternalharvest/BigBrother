@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class BlockChangePacket extends OutboundPacket{
 
+	const PID = self::BLOCK_CHANGE_PACKET;
+
 	/** @var int */
 	public $x;
 	/** @var int */
@@ -43,10 +45,6 @@ class BlockChangePacket extends OutboundPacket{
 	public $blockId;
 	/** @var int */
 	public $blockMeta;
-
-	public function pid() : int{
-		return self::BLOCK_CHANGE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putPosition($this->x, $this->y, $this->z);

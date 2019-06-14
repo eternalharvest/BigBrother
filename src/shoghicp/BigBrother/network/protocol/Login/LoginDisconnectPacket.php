@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class LoginDisconnectPacket extends OutboundPacket{
 
+	const PID = self::LOGIN_DISCONNECT_PACKET;
+
 	/** @var string */
 	public $reason;
-
-	public function pid() : int{
-		return self::LOGIN_DISCONNECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putString($this->reason);

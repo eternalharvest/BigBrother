@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class PlayerPositionPacket extends InboundPacket{
 
+	const PID = self::PLAYER_POSITION_PACKET;
+
 	/** @var float */
 	public $x;
 	/** @var float */
@@ -41,10 +43,6 @@ class PlayerPositionPacket extends InboundPacket{
 	public $z;
 	/** @var bool */
 	public $onGround;
-
-	public function pid() : int{
-		return self::PLAYER_POSITION_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->x = $this->getDouble();

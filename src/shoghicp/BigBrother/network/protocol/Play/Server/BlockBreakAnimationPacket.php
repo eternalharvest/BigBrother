@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class BlockBreakAnimationPacket extends OutboundPacket{
 
+	const PID = self::BLOCK_BREAK_ANIMATION_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
@@ -43,10 +45,6 @@ class BlockBreakAnimationPacket extends OutboundPacket{
 	public $z;
 	/** @var int */
 	public $destroyStage;
-
-	public function pid() : int{
-		return self::BLOCK_BREAK_ANIMATION_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

@@ -34,16 +34,14 @@ use pocketmine\item\Item;
 
 class SetSlotPacket extends OutboundPacket{
 
+	const PID = self::SET_SLOT_PACKET;
+
 	/** @var int */
 	public $windowID;
 	/** @var int */
 	public $slot;
 	/** @var Item */
 	public $item;
-
-	public function pid() : int{
-		return self::SET_SLOT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putByte($this->windowID);

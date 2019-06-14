@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class EncryptionResponsePacket extends InboundPacket{
 
+	const PID = self::ENCRYPTION_RESPONSE_PACKET;
+
 	/** @var string */
 	public $sharedSecret;
 	/** @var string */
 	public $verifyToken;
-
-	public function pid() : int{
-		return self::ENCRYPTION_RESPONSE_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->sharedSecret = $this->get($this->getVarInt());

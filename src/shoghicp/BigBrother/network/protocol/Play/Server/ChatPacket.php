@@ -33,14 +33,12 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class ChatPacket extends OutboundPacket{
 
+	const PID = self::CHAT_PACKET;
+
 	/** @var string */
 	public $message;
 	/** @var int */
 	public $position = 0; //0 = chat, 1 = system message, 2 = action bar
-
-	public function pid() : int{
-		return self::CHAT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putString($this->message);

@@ -33,12 +33,10 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class KeepAlivePacket extends OutboundPacket{
 
+	const PID = self::KEEP_ALIVE_PACKET;
+
 	/** @var int */
 	public $id;
-
-	public function pid() : int{
-		return self::KEEP_ALIVE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putLong($this->id);

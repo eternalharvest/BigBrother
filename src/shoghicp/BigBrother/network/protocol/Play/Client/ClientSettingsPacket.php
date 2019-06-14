@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class ClientSettingsPacket extends InboundPacket{
 
+	const PID = self::CLIENT_SETTINGS_PACKET;
+
 	/** @var string */
 	public $lang;
 	/** @var int */
@@ -45,10 +47,6 @@ class ClientSettingsPacket extends InboundPacket{
 	public $skinSetting;
 	/** @var int */
 	public $mainHand;
-
-	public function pid() : int{
-		return self::CLIENT_SETTINGS_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->lang = $this->getString();

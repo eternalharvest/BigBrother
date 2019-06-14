@@ -33,16 +33,14 @@ use shoghicp\BigBrother\network\InboundPacket;
 
 class EntityActionPacket extends InboundPacket{
 
+	const PID = self::ENTITY_ACTION_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
 	public $actionID;
 	/** @var int */
 	public $jumpboost;
-
-	public function pid() : int{
-		return self::ENTITY_ACTION_PACKET;
-	}
 
 	protected function decode() : void{
 		$this->eid = $this->getVarInt();

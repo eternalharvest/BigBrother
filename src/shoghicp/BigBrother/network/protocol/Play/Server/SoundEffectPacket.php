@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SoundEffectPacket extends OutboundPacket{
 
+	const PID = self::SOUND_EFFECT_PACKET;
+
 	/** @var int */
 	public $id;
 	/** @var int */
@@ -47,10 +49,6 @@ class SoundEffectPacket extends OutboundPacket{
 	public $volume;
 	/** @var float */
 	public $pitch;
-
-	public function pid() : int{
-		return self::SOUND_EFFECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->id);

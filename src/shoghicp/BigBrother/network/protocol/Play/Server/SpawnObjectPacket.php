@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class SpawnObjectPacket extends OutboundPacket{
 
+	const PID = self::SPAWN_OBJECT_PACKET;
+
 	const BOAT              =  1;
 	const ITEM_STACK        =  2;
 	const AREA_EFFECT_CLOUD =  3;
@@ -87,10 +89,6 @@ class SpawnObjectPacket extends OutboundPacket{
 	public $velocityY;
 	/** @var float */
 	public $velocityZ;
-
-	public function pid() : int{
-		return self::SPAWN_OBJECT_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putVarInt($this->eid);

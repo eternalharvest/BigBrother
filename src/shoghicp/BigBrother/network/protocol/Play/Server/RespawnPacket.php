@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class RespawnPacket extends OutboundPacket{
 
+	const PID = self::RESPAWN_PACKET;
+
 	/** @var int */
 	public $dimension;
 	/** @var int */
@@ -41,10 +43,6 @@ class RespawnPacket extends OutboundPacket{
 	public $gamemode;
 	/** @var string */
 	public $levelType;
-
-	public function pid() : int{
-		return self::RESPAWN_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putInt($this->dimension);

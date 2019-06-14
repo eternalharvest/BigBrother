@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class JoinGamePacket extends OutboundPacket{
 
+	const PID = self::JOIN_GAME_PACKET;
+
 	/** @var int */
 	public $eid;
 	/** @var int */
@@ -47,10 +49,6 @@ class JoinGamePacket extends OutboundPacket{
 	public $levelType;
 	/** @var bool */
 	public $reducedDebugInfo = false;
-
-	public function pid() : int{
-		return self::JOIN_GAME_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putInt($this->eid);

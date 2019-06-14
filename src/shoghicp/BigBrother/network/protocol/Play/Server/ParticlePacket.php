@@ -33,6 +33,8 @@ use shoghicp\BigBrother\network\OutboundPacket;
 
 class ParticlePacket extends OutboundPacket{
 
+	const PID = self::PARTICLE_PACKET;
+
 	/** @var int */
 	public $id;
 	/** @var bool */
@@ -55,10 +57,6 @@ class ParticlePacket extends OutboundPacket{
 	public $count;
 	/** @var array */
 	public $addData = [];
-
-	public function pid() : int{
-		return self::PARTICLE_PACKET;
-	}
 
 	protected function encode() : void{
 		$this->putInt($this->id);
