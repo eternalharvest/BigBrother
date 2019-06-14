@@ -47,11 +47,9 @@ use pocketmine\nbt\tag\LongTag;
 use pocketmine\nbt\tag\NamedTag;
 use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\tile\Tile;
 use pocketmine\timings\TimingsHandler;
 use pocketmine\utils\BinaryStream;
 use pocketmine\utils\Binary;
-use shoghicp\BigBrother\BigBrother;
 
 class ConvertUtils{
 	/** @var TimingsHandler */
@@ -735,9 +733,9 @@ class ConvertUtils{
 						$newdata[3] = [6, true];
 					}
 
-					if(((int) $d[1] & (1 << Human::DATA_FLAG_IMMOBILE)) > 0){//TODO
+					/*if(((int) $d[1] & (1 << Human::DATA_FLAG_IMMOBILE)) > 0){//TODO
 						//$newdata[11] = [0, true];
-					}
+					}*/
 
 					if(((int) $d[1] & (1 << Human::DATA_FLAG_SILENT)) > 0){
 						$newdata[4] = [6, true];
@@ -753,6 +751,12 @@ class ConvertUtils{
 				break;
 				case Human::DATA_FUSE_LENGTH://TNT
 					$newdata[6] = [1, $d[1]];
+				break;
+				case Human::DATA_POTION_COLOR:
+					$newdata[8] = [1, $d[1]];
+				break;
+				case Human::DATA_POTION_AMBIENT:
+					$newdata[9] = [6, $d[1] ? true : false];
 				break;
 				case Human::DATA_VARIANT:
 				case Human::DATA_PLAYER_FLAGS:
@@ -806,7 +810,6 @@ class ConvertUtils{
 
 	/*
 	 * Blame Mojang!! :-@
-	 * Why Mojang change the order of flag bits?
 	 * Why Mojang change the directions??
 	 *
 	 * @param int &$blockdata
@@ -814,14 +817,16 @@ class ConvertUtils{
 	 * #blamemojang
 	 */
 	private static function convertButton(int &$blockdata) : void{
-		/*//var_dump($blockdata);
+		$directions = [
+			0 => 0, // Button on block bottom facing down
+			1 => 5, // Button on block top facing up
+			2 => 4, // Button on block side facing north
+			3 => 3, // Button on block side facing south
+			4 => 2, // Button on block side facing west
+			5 => 1, // Button on block side facing east
+		];
 
-		//swap bits
-		$blockdata ^= (($blockdata & 0x04) << 1);
-		$blockdata ^= (($blockdata & 0x08) >> 1);
-		$blockdata ^= (($blockdata & 0x04) << 1);
-
-		$blockdata = (($blockdata >> 2) << 2) | $blockdata & 0x03;*/
+		$blockdata = ($blockdata & 0x08) | $directions[$blockdata & 0x07];
 	}
 
 }

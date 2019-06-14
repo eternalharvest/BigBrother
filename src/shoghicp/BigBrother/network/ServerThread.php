@@ -65,7 +65,7 @@ class ServerThread extends \Thread{
 	 * @param string          $interface
 	 * @param string          $motd
 	 * @param string|null     $icon
-	 *
+	 * @param bool            $autoStart
 	 * @throws \Exception
 	 * @suppress PhanTypeComparisonFromArray
 	 */
@@ -231,5 +231,9 @@ class ServerThread extends \Thread{
 
 		$data = unserialize($this->data);
 		$manager = new ServerManager($this, $this->port, $this->interface, $data["motd"], $data["icon"]);
+	}
+
+	public function setGarbage(){
+		// TODO: Implement setGarbage() method.
 	}
 }

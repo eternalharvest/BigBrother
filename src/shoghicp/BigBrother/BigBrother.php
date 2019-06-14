@@ -29,6 +29,9 @@ declare(strict_types=1);
 
 namespace shoghicp\BigBrother;
 
+use phpseclib\Crypt\RSA;
+use phpseclib\Crypt\AES;
+
 use pocketmine\plugin\PluginBase;
 use pocketmine\network\mcpe\protocol\ProtocolInfo as Info;
 use pocketmine\network\mcpe\protocol\TextPacket;
@@ -40,14 +43,12 @@ use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\Listener;
 use pocketmine\utils\TextFormat;
 
-use phpseclib\Crypt\RSA;
 use shoghicp\BigBrother\network\ServerManager;
 use shoghicp\BigBrother\network\ProtocolInterface;
 use shoghicp\BigBrother\network\Translator;
 use shoghicp\BigBrother\network\protocol\Play\Server\RespawnPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\OpenSignEditorPacket;
 use shoghicp\BigBrother\utils\ConvertUtils;
-use shoghicp\BigBrother\utils\AES;
 
 class BigBrother extends PluginBase implements Listener{
 
@@ -72,6 +73,22 @@ class BigBrother extends PluginBase implements Listener{
 	/**
 	 * @override
 	 */
+	public function onLoad()
+	{
+		if(is_file($composer = $this->getFile() . "vendor/autoload.php")){
+			$this->getLogger()->info("Registering Composer autoloader...");
+			__require($composer);
+		}else{
+			$this->getLogger()->critical("Composer autoloader not found");
+			$this->getLogger()->critical("Please initialize composer dependencies before running");
+			$this->getPluginLoader()->disablePlugin($this);
+			return;
+		}
+	}
+
+	/**
+	 * @override
+	 */
 	public function onEnable(){
 		$enable = true;
 		foreach($this->getServer()->getNetwork()->getInterfaces() as $interface){
@@ -81,7 +98,7 @@ class BigBrother extends PluginBase implements Listener{
 		}
 
 		if($enable){
-			if(Info::CURRENT_PROTOCOL === 223){
+			if(Info::CURRENT_PROTOCOL === 340){
 				ConvertUtils::init();
 
 				$this->saveDefaultConfig();
@@ -102,13 +119,12 @@ class BigBrother extends PluginBase implements Listener{
 				$this->getLogger()->info("OS: ".php_uname());
 				$this->getLogger()->info("PHP version: ".PHP_VERSION);
 
-				$this->getLogger()->info("PMMP version: ".\pocketmine\VERSION." ".\pocketmine\CODENAME);
 				$this->getLogger()->info("PMMP Server version: ".$this->getServer()->getVersion());
-				$this->getLogger()->info("PMMP API version: ".\pocketmine\API_VERSION);
+				$this->getLogger()->info("PMMP API version: ".$this->getServer()->getApiVersion());
 
-				if(!$this->isPhar() and is_dir($this->getDataFolder().".git")){
+				if(!$this->isPhar() and is_dir($this->getFile().".git")){
 					$cwd = getcwd();
-					chdir($this->getDataFolder());
+					chdir($this->getFile());
 					@exec("git describe --tags --always --dirty", $revision, $retval);
 					if($retval == 0){
 						$this->getLogger()->info("BigBrother revision: ".$revision[0]);
@@ -116,7 +132,7 @@ class BigBrother extends PluginBase implements Listener{
 					chdir($cwd);
 				}
 
-				$aes = new AES();
+				$aes = new AES(AES::MODE_CFB8);
 				switch($aes->getEngine()){
 					case AES::ENGINE_OPENSSL:
 						$this->getLogger()->info("Use openssl as AES encryption engine.");
@@ -153,7 +169,7 @@ class BigBrother extends PluginBase implements Listener{
 
 				if(!$this->getConfig()->exists("motd")){
 					$this->getLogger()->warning("No motd has been set. The server description will be empty.");
-					$this->getPluginLoader()->disablePlugin($this);
+					$this->getServer()->getPluginManager()->disablePlugin($this);
 					return;
 				}
 
@@ -175,11 +191,11 @@ class BigBrother extends PluginBase implements Listener{
 				$this->getServer()->getPluginManager()->registerEvents($this, $this);
 
 				$this->translator = new Translator();
-				$this->interface = new ProtocolInterface($this, $this->getServer(), $this->translator, $this->getConfig()->get("network-compression-threshold"));
+				$this->interface = new ProtocolInterface($this, $this->getServer(), $this->translator, (int) $this->getConfig()->get("network-compression-threshold"));
 				$this->getServer()->getNetwork()->registerInterface($this->interface);
 			}else{
 				$this->getLogger()->critical("Couldn't find a protocol translator for #".Info::CURRENT_PROTOCOL .", disabling plugin");
-				$this->getPluginLoader()->disablePlugin($this);
+				$this->getServer()->getPluginManager()->disablePlugin($this);
 			}
 		}
 	}
@@ -361,4 +377,14 @@ class BigBrother extends PluginBase implements Listener{
 		$result = json_encode($result, JSON_UNESCAPED_SLASHES);
 		return $result;
 	}
+}
+
+/**
+ * Scope isolated require.
+ *
+ * prevents access to $this/self from included file
+ */
+function __require($file)
+{
+	return require($file);
 }
