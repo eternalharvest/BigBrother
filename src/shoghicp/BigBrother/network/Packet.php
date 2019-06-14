@@ -38,10 +38,77 @@ abstract class Packet extends \stdClass{
 
 	const PID = -1;
 
+	/** @var array */
+	private static $knownPackets = [[/* LOGIN */], [/* PLAY */], [/* STATUS */]];
+	/** @var array */
+	private static $inboundPackets = [[/* LOGIN */], [/* PLAY */], [/* STATUS */]];
+	/** @var array */
+	private static $outboundPackets = [[/* LOGIN */], [/* PLAY */], [/* STATUS */]];
+
 	/** @var string */
 	protected $buffer;
 	/** @var int */
 	protected $offset = 0;
+
+	public static function init() : void{
+		$iter = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__FILE__)));
+		foreach($iter as $path => $finfo){
+			if($finfo->isFile() and pathinfo($path, PATHINFO_EXTENSION) == 'php') {
+				__require_once($path);
+			}
+		}
+
+		foreach(get_declared_classes() as $class){
+			if(strpos($class, __NAMESPACE__.'\protocol\Login') === 0){
+				self::register(0, $class);
+			}
+
+			if(strpos($class, __NAMESPACE__.'\protocol\Play') === 0){
+				self::register(1, $class);
+			}
+
+			if(strpos($class, __NAMESPACE__.'\protocol\Status') === 0){
+				self::register(2, $class);
+			}
+		}
+	}
+
+	protected static function register(int $status, string $className) : void{
+		$class = new \ReflectionClass($className);
+		if(is_a($className, Packet::class, true) and !$class->isAbstract()){
+			if($className::PID !== -1){
+				if(is_a($className, InboundPacket::class, true) and !isset(self::$inboundPackets[$status][$className::PID])){
+					self::$inboundPackets[$status][$className::PID] = $className;
+					return;
+				}
+
+				if(is_a($className, OutboundPacket::class, true) and !isset(self::$outboundPackets[$status][$className::PID])){
+					self::$outboundPackets[$status][$className::PID] = $className;
+					return;
+				}
+
+				if(!isset(self::$knownPackets[$status][$className::PID])){
+					self::$knownPackets[$status][$className::PID] = $className;
+				}
+			}
+		}
+	}
+
+	public static function create(int $pid, int $status=1, bool $inbound=true, bool $outbound=false) : ?Packet{
+		if($inbound and isset(self::$inboundPackets[$status][$pid])){
+			return new self::$inboundPackets[$status][$pid]();
+		}
+
+		if($outbound and isset(self::$outboundPackets[$status][$pid])){
+			return new self::$outboundPackets[$status][$pid]();
+		}
+
+		if(isset(self::$knownPackets[$status][$pid])){
+			return new self::$knownPackets[$status][$pid]();
+		}
+
+		return null;
+	}
 
 	protected function get($len) : string{
 		if($len < 0){
@@ -248,4 +315,8 @@ abstract class Packet extends \stdClass{
 		$this->offset = $offset;
 		$this->decode();
 	}
+}
+
+function __require_once(string $path) : void{
+	require_once($path);
 }

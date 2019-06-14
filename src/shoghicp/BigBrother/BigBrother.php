@@ -46,6 +46,7 @@ use pocketmine\utils\TextFormat;
 use shoghicp\BigBrother\network\ServerManager;
 use shoghicp\BigBrother\network\ProtocolInterface;
 use shoghicp\BigBrother\network\Translator;
+use shoghicp\BigBrother\network\Packet;
 use shoghicp\BigBrother\network\protocol\Play\Server\RespawnPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\OpenSignEditorPacket;
 use shoghicp\BigBrother\utils\ConvertUtils;
@@ -99,6 +100,7 @@ class BigBrother extends PluginBase implements Listener{
 
 		if($enable){
 			if(Info::CURRENT_PROTOCOL === 354){
+				Packet::init();
 				ConvertUtils::init();
 
 				$this->saveDefaultConfig();
