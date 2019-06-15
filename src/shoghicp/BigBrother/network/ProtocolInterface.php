@@ -150,9 +150,8 @@ class ProtocolInterface implements SourceInterface{
 	 */
 	protected function sendPacket(int $target, Packet $packet){
 		if(\pocketmine\DEBUG > 4){
-			$id = bin2hex(chr($packet->pid()));
-			if($id !== "1f"){
-				echo "[Send][Interface] 0x".bin2hex(chr($packet->pid()))."\n";
+			if($packet->pid() == OutboundPacket::KEEP_ALIVE_PACKET){
+				$this->server->getLogger()->debug("[Send][Interface] 0x".bin2hex(chr($packet->pid())));
 			}
 		}
 
@@ -251,16 +250,14 @@ class ProtocolInterface implements SourceInterface{
 	 * @param string        $payload
 	 */
 	protected function handlePacket(DesktopPlayer $player, string $payload){
-		if(\pocketmine\DEBUG > 4){
-			$id = bin2hex(chr(ord($payload{0})));
-			if($id !== "0b"){//KeepAlivePacket
-				echo "[Receive][Interface] 0x".bin2hex(chr(ord($payload{0})))."\n";
-			}
-		}
-
 		$pid = ord($payload{0});
 		$offset = 1;
 
+		if(\pocketmine\DEBUG > 4){
+			if($pid == InboundPacket::KEEP_ALIVE_PACKET){
+				$this->server->getLogger()->debug("[Receive][Interface] 0x".bin2hex(chr($pid)));
+			}
+		}
 
 		$pk = Packet::create($pid, $status = $player->bigBrother_getStatus());
 		if($pk !== null){
@@ -290,9 +287,8 @@ class ProtocolInterface implements SourceInterface{
 				$this->receivePacket($player, $pk);
 			}else{
 				if(\pocketmine\DEBUG > 4){
-					echo "[Receive][Interface] 0x".bin2hex(chr($pid))." Not implemented\n"; //Debug
+					$this->server->getLogger()->debug("[Receive][Interface] 0x".bin2hex(chr($pid))." Not implemented");
 				}
-				return;
 			}
 			break;
 		}
