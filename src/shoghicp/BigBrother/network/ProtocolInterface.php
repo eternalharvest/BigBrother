@@ -251,7 +251,6 @@ class ProtocolInterface implements SourceInterface{
 	 */
 	protected function handlePacket(DesktopPlayer $player, string $payload){
 		$pid = ord($payload{0});
-		$offset = 1;
 
 		if(\pocketmine\DEBUG > 4){
 			if($pid == InboundPacket::KEEP_ALIVE_PACKET){
@@ -261,7 +260,7 @@ class ProtocolInterface implements SourceInterface{
 
 		$pk = Packet::create($pid, $status = $player->bigBrother_getStatus());
 		if($pk !== null){
-			$pk->read($payload, $offset);
+			$pk->read($payload, 1);
 		}
 
 		switch($status){
@@ -308,12 +307,13 @@ class ProtocolInterface implements SourceInterface{
 			$offset = 1;
 			$pid = ord($buffer{0});
 
-			if($pid === ServerManager::PACKET_SEND_PACKET){
+			switch($pid){
+			case ServerManager::PACKET_SEND_PACKET:
 				$id = Binary::readInt(substr($buffer, $offset, 4));
 				$offset += 4;
 				if(isset($this->sessionsPlayers[$id])){
-					$payload = substr($buffer, $offset);
 					try{
+						$payload = substr($buffer, $offset);
 						$this->handlePacket($this->sessionsPlayers[$id], $payload);
 					}catch(\Exception $e){
 						if(\pocketmine\DEBUG > 1){
@@ -325,7 +325,9 @@ class ProtocolInterface implements SourceInterface{
 						}
 					}
 				}
-			}elseif($pid === ServerManager::PACKET_OPEN_SESSION){
+				break;
+
+			case ServerManager::PACKET_OPEN_SESSION:
 				$id = Binary::readInt(substr($buffer, $offset, 4));
 				$offset += 4;
 				if(isset($this->sessionsPlayers[$id])){
@@ -342,10 +344,12 @@ class ProtocolInterface implements SourceInterface{
 				$this->sessions->attach($player, $id);
 				$this->sessionsPlayers[$id] = $player;
 				$this->plugin->getServer()->addPlayer($player);
-			}elseif($pid === ServerManager::PACKET_CLOSE_SESSION){
-				$id = Binary::readInt(substr($buffer, $offset, 4));
+				break;
 
+			case ServerManager::PACKET_CLOSE_SESSION:
+				$id = Binary::readInt(substr($buffer, $offset, 4));
 				$this->closeSession($id);
+				break;
 			}
 
 		}
