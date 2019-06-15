@@ -258,38 +258,23 @@ class ProtocolInterface implements SourceInterface{
 			}
 		}
 
-		$pk = Packet::create($pid, $status = $player->bigBrother_getStatus());
-		if($pk !== null){
-			$pk->read($payload, 1);
-		}
+		$packet = Packet::create($pid, $status = $player->bigBrother_getStatus());
+		if($packet !== null){
+			$packet->read($payload, 1);
 
-		switch($status){
-		case 0: //Login
-			switch($pid){
-			case InboundPacket::LOGIN_START_PACKET:
-				$player->bigBrother_handleAuthentication($this->plugin, $pk->name, $this->plugin->isOnlineMode());
+			switch($status){
+			case 0: //Login
+				$player->bigBrother_handleAuthentication($packet);
 				break;
 
-			case InboundPacket::ENCRYPTION_RESPONSE_PACKET:
-				if($this->plugin->isOnlineMode()){
-					$player->bigBrother_processAuthentication($this->plugin, $pk);
-				}
+			case 1: //Play
+				$this->receivePacket($player, $packet);
 				break;
-
-			default:
-				$player->close($player->getLeaveMessage(), "Unexpected packet $pid");
 			}
-			break;
-
-		case 1: //Play
-			if($pk !== null){
-				$this->receivePacket($player, $pk);
-			}else{
-				if(\pocketmine\DEBUG > 4){
-					$this->server->getLogger()->debug("[Receive][Interface] 0x".bin2hex(chr($pid))." Not implemented");
-				}
+		}else{
+			if(\pocketmine\DEBUG > 4){
+				$this->server->getLogger()->debug("[Receive][Interface] 0x".bin2hex(chr($pid))." Not implemented");
 			}
-			break;
 		}
 	}
 

@@ -50,6 +50,7 @@ use pocketmine\timings\Timings;
 use pocketmine\utils\Internet;
 use pocketmine\utils\TextFormat;
 use shoghicp\BigBrother\network\Packet;
+use shoghicp\BigBrother\network\InboundPacket;
 use shoghicp\BigBrother\network\protocol\Login\EncryptionRequestPacket;
 use shoghicp\BigBrother\network\protocol\Login\EncryptionResponsePacket;
 use shoghicp\BigBrother\network\protocol\Login\LoginSuccessPacket;
@@ -482,7 +483,7 @@ class DesktopPlayer extends Player{
 	 * @param string     $uuid
 	 * @param array|null $onlineModeData
 	 */
-	public function bigBrother_authenticate(string $uuid, ?array $onlineModeData = null) : void{
+	private function bigBrother_authenticate(string $uuid, ?array $onlineModeData = null) : void{
 		if($this->bigBrother_status === 0){
 			$this->bigBrother_uuid = $uuid;
 			$this->bigBrother_formatedUUID = Binary::UUIDtoString($this->bigBrother_uuid);
@@ -553,52 +554,69 @@ class DesktopPlayer extends Player{
 	}
 
 	/**
-	 * @param BigBrother $plugin
-	 * @param EncryptionResponsePacket $packet
+	 * @param InboundPacket $packet
 	 */
-	public function bigBrother_processAuthentication(BigBrother $plugin, EncryptionResponsePacket $packet) : void{
-		$this->bigBrother_secret = $plugin->decryptBinary($packet->sharedSecret);
-		$token = $plugin->decryptBinary($packet->verifyToken);
-		$this->interface->enableEncryption($this, $this->bigBrother_secret);
-		if($token !== $this->bigBrother_checkToken){
-			$this->close("", "Invalid check token");
-		}else{
-			$this->getAuthenticateOnline($this->bigBrother_username, Binary::sha1("".$this->bigBrother_secret.$plugin->getASN1PublicKey()));
-		}
-	}
-
-	/**
-	 * @param BigBrother $plugin
-	 * @param string $username
-	 * @param bool $onlineMode
-	 */
-	public function bigBrother_handleAuthentication(BigBrother $plugin, string $username, bool $onlineMode = false) : void{
+	public function bigBrother_handleAuthentication(InboundPacket $packet) : void{
 		if($this->bigBrother_status === 0){
-			$this->bigBrother_username = $username;
-			if($onlineMode){
-				$pk = new EncryptionRequestPacket();
-				$pk->serverID = "";
-				$pk->publicKey = $plugin->getASN1PublicKey();
-				$pk->verifyToken = $this->bigBrother_checkToken = str_repeat("\x00", 4);
-				$this->putRawPacket($pk);
-			}else{
-				$info = $this->getProfile($username);
-				if(is_array($info)){
-					$this->bigBrother_authenticate($info["id"], $info["properties"]);
+			switch (($pid = $packet->pid())){
+			case InboundPacket::LOGIN_START_PACKET:
+				$this->bigBrother_username = $packet->name;
+				if($this->plugin->isOnlineMode()){
+					$pk = new EncryptionRequestPacket();
+					$pk->serverID = "";
+					$pk->publicKey = $this->plugin->getASN1PublicKey();
+					$pk->verifyToken = $this->bigBrother_checkToken = str_repeat("\x00", 4);
+					$this->putRawPacket($pk);
+				}else{
+					if(is_array($info = $this->getProfile())){
+						$this->bigBrother_authenticate($info["id"], $info["properties"]);
+					}
 				}
+				break;
+
+			case InboundPacket::ENCRYPTION_RESPONSE_PACKET:
+				$this->bigBrother_secret = $this->plugin->decryptBinary($packet->sharedSecret);
+				$token = $this->plugin->decryptBinary($packet->verifyToken);
+				$this->interface->enableEncryption($this, $this->bigBrother_secret);
+				if($token !== $this->bigBrother_checkToken){
+					$this->close("", "Invalid check token");
+				}else{
+					$result = null;
+					$username = $this->bigBrother_username;
+					$hash = Binary::sha1("".$this->bigBrother_secret.$this->plugin->getASN1PublicKey());
+
+					$response = Internet::getURL("https://sessionserver.mojang.com/session/minecraft/hasJoined?username=".$username."&serverId=".$hash, 5);
+					if($response !== false){
+						$result = json_decode($response, true);
+					}
+
+					if(is_array($result) and isset($result["id"])){
+						$this->bigBrother_authenticate($result["id"], $result["properties"]);
+					}else{
+						$this->close("", "User not premium");
+					}
+				}
+				break;
+
+			default:
+				$this->close($this->getLeaveMessage(), "Unexpected packet $pid");
+				break;
 			}
 		}
 	}
 
 	/**
-	 * @param string $username
 	 * @return array|bool profile data if success else false
 	 */
-	public function getProfile(string $username){
+	public function getProfile(){
 		$profile = null;
 		$info = null;
 
-		$response = Internet::getURL("https://api.mojang.com/users/profiles/minecraft/".$username);
+		if($this->bigBrother_username == null){
+			return null;
+		}
+
+		$response = Internet::getURL("https://api.mojang.com/users/profiles/minecraft/".$this->bigBrother_username);
 		if($response !== false){
 			$profile = json_decode($response, true);
 		}
@@ -619,27 +637,6 @@ class DesktopPlayer extends Player{
 
 		return $info;
 	}
-
-	/**
-	 * @param string $username
-	 * @param string $hash
-	 */
-	public function getAuthenticateOnline(string $username, string $hash) : void{
-		$result = null;
-
-		$response = Internet::getURL("https://sessionserver.mojang.com/session/minecraft/hasJoined?username=".$username."&serverId=".$hash, 5);
-		if($response !== false){
-			$result = json_decode($response, true);
-		}
-
-		if(is_array($result) and isset($result["id"])){
-			$this->bigBrother_authenticate($result["id"], $result["properties"]);
-		}else{
-			$this->close("", "User not premium");
-		}
-	}
-
-
 
 	/**
 	 * @param DataPacket $packet
