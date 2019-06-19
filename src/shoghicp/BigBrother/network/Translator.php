@@ -29,8 +29,10 @@ declare(strict_types=1);
 
 namespace shoghicp\BigBrother\network;
 
+use InvalidStateException;
 use pocketmine\block\Block;
 use pocketmine\block\BlockFactory;
+use const pocketmine\DEBUG;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\level\particle\Particle;
@@ -47,6 +49,7 @@ use pocketmine\network\mcpe\protocol\AddPaintingPacket;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
+use pocketmine\network\mcpe\protocol\BatchPacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
 use pocketmine\network\mcpe\protocol\BlockEventPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
@@ -149,6 +152,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\RespawnPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SelectAdvancementTabPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\ServerDifficultyPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SetExperiencePacket;
+use shoghicp\BigBrother\network\protocol\Play\Server\SpawnGlobalEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnExperienceOrbPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnMobPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnObjectPacket;
@@ -162,6 +166,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\UpdateBlockEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\UpdateHealthPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\UseBedPacket;
 use shoghicp\BigBrother\utils\ConvertUtils;
+use stdClass;
 
 class Translator{
 
@@ -263,6 +268,7 @@ class Translator{
 					break;
 					case "MC|BEdit":
 						$packets = [];
+						/** @var Item $item */
 						$item = clone $packet->data[0];
 
 						if(!is_null(($pages = $item->getNamedTagEntry("pages")))){
@@ -290,6 +296,7 @@ class Translator{
 					break;
 					case "MC|BSign":
 						$packets = [];
+						/** @var Item $item */
 						$item = clone $packet->data[0];
 
 						if(!is_null(($pages = $item->getNamedTagEntry("pages")))){
@@ -336,7 +343,7 @@ class Translator{
 						case UseEntityPacket::INTERACT:
 							$pk = new InventoryTransactionPacket();
 							$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-							$pk->trData = new \stdClass();
+							$pk->trData = new stdClass();
 							$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_CLICK_BLOCK;
 							$pk->trData->x = $frame->x;
 							$pk->trData->y = $frame->y;
@@ -358,7 +365,7 @@ class Translator{
 							}else{
 								$pk = new InventoryTransactionPacket();
 								$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-								$pk->trData = new \stdClass();
+								$pk->trData = new stdClass();
 								$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_BREAK_BLOCK;
 								$pk->trData->x = $frame->x;
 								$pk->trData->y = $frame->y;
@@ -385,7 +392,7 @@ class Translator{
 				}else{
 					$pk = new InventoryTransactionPacket();
 					$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM_ON_ENTITY;
-					$pk->trData = new \stdClass();
+					$pk->trData = new stdClass();
 					$pk->trData->entityRuntimeId = $packet->target;
 					$pk->trData->hotbarSlot = $player->getInventory()->getHeldItemIndex();
 					$pk->trData->itemInHand = $player->getInventory()->getItemInHand();
@@ -530,7 +537,7 @@ class Translator{
 						if($player->getGamemode() === 1){
 							$pk = new InventoryTransactionPacket();
 							$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-							$pk->trData = new \stdClass();
+							$pk->trData = new stdClass();
 							$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_BREAK_BLOCK;
 							$pk->trData->x = $packet->x;
 							$pk->trData->y = $packet->y;
@@ -569,7 +576,7 @@ class Translator{
 
 								$pk = new InventoryTransactionPacket();
 								$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-								$pk->trData = new \stdClass();
+								$pk->trData = new stdClass();
 								$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_BREAK_BLOCK;
 								$pk->trData->x = $packet->x;
 								$pk->trData->y = $packet->y;
@@ -625,7 +632,7 @@ class Translator{
 
 							$pk = new InventoryTransactionPacket();
 							$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-							$pk->trData = new \stdClass();
+							$pk->trData = new stdClass();
 							$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_BREAK_BLOCK;
 							$pk->trData->x = $packet->x;
 							$pk->trData->y = $packet->y;
@@ -680,7 +687,7 @@ class Translator{
 					case 5:
 						$pk = new InventoryTransactionPacket();
 						$pk->transactionType = InventoryTransactionPacket::TYPE_RELEASE_ITEM;
-						$pk->trData = new \stdClass();
+						$pk->trData = new stdClass();
 						$pk->trData->hotbarSlot = $player->getInventory()->getHeldItemIndex();
 						$pk->trData->itemInHand = $item = $player->getInventory()->getItemInHand();
 						$pk->trData->headPos = new Vector3($packet->x, $packet->y, $packet->z);
@@ -812,6 +819,7 @@ class Translator{
 				$pk->entityRuntimeId = $player->getId();
 
 				$pos = $player->bigBrother_getBreakPosition();
+				/** @var Vector3[] $pos */
 				if(!$pos[0]->equals(new Vector3(0, 0, 0))){
 					$packets = [$pk];
 
@@ -847,7 +855,7 @@ class Translator{
 
 				$pk = new InventoryTransactionPacket();
 				$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-				$pk->trData = new \stdClass();
+				$pk->trData = new stdClass();
 				$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_CLICK_BLOCK;
 				$pk->trData->x = $packet->x;
 				$pk->trData->y = $packet->y;
@@ -872,7 +880,7 @@ class Translator{
 
 				$pk = new InventoryTransactionPacket();
 				$pk->transactionType = InventoryTransactionPacket::TYPE_USE_ITEM;
-				$pk->trData = new \stdClass();
+				$pk->trData = new stdClass();
 				$pk->trData->actionType = InventoryTransactionPacket::USE_ITEM_ACTION_CLICK_AIR;
 				$pk->trData->x = 0;
 				$pk->trData->y = 0;
@@ -886,7 +894,7 @@ class Translator{
 				return $pk;
 
 			default:
-				if(\pocketmine\DEBUG > 4){
+				if(DEBUG > 4){
 					echo "[Receive][Translator] 0x".bin2hex(chr($packet->pid()))." Not implemented\n";
 				}
 				return null;
@@ -1068,7 +1076,7 @@ class Translator{
 						$type = "villager";
 						$packet->type = 120;
 					break;
-					case 16://Mooshroom
+					case 16://Moosh room
 						$type = "cow";
 						$packet->type = 96;
 					break;
@@ -1084,11 +1092,11 @@ class Translator{
 						$type = "bat";
 						$packet->type = 65;
 					break;
-					case 20://IronGolem
+					case 20://Iron Golem
 						$type = "iron_golem";
 						$packet->type = 99;
 					break;
-					case 21://SnowGolem (Snowman)
+					case 21://Snow Golem (Snowman)
 						$type = "snowman";
 						$packet->type = 97;
 					break;
@@ -1144,7 +1152,7 @@ class Translator{
 						$type = "ghast";
 						$packet->type = 56;
 					break;
-					case 42://LavaSlime
+					case 42://Lava Slime
 						$type = "magmacube";
 						$packet->type = 62;
 					break;
@@ -1287,19 +1295,25 @@ class Translator{
 					case 90;//Boat
 						$packet->type = 1;
 					break;
-					/*case 93://Lightning
-						//Spawn Global Entity
+					case 93://Lightning
+						$pk = new SpawnGlobalEntityPacket();
+						$pk->eid = $packet->entityRuntimeId;
+						$pk->type = SpawnGlobalEntityPacket::TYPE_LIGHTNING;
+						$pk->x = $packet->position->x;
+						$pk->y = $packet->position->y;
+						$pk->z = $packet->position->z;
+						return $pk;
 					break;
-					case 94://BlazeFireball
+					/*case 94://BlazeFireball
 						//Spawn Object
 					break;
-					case 96://MinecartHopper
+					case 96://Minecart Hopper
 						//Spawn Object
 					break;
-					case 97:MinecartTNT
+					case 97:Minecart TNT
 						//Spawn Object
 					break;
-					case 98://MinecartChest
+					case 98://Minecart Chest
 						//Spawn Object
 					break;*/
 					default:
@@ -1666,7 +1680,7 @@ class Translator{
 						return null;
 					break;
 					default:
-						if(\pocketmine\DEBUG > 3){
+						if(DEBUG > 3){
 							echo "LevelSoundEventPacket: ".$packet->sound."\n";
 						}
 						return null;
@@ -1691,7 +1705,7 @@ class Translator{
 			case Info::LEVEL_EVENT_PACKET://TODO
 				/** @var LevelEventPacket $packet */
 				$isSoundEffect = false;
-				$isparticle = false;
+				$isParticle = false;
 				$addData = [];
 				$category = 0;
 				$name = "";
@@ -1727,7 +1741,7 @@ class Translator{
 							default:
 								$name = "entity.snowball.throw";
 
-								if(\pocketmine\DEBUG > 3){
+								if(DEBUG > 3){
 									echo "LevelEventPacket: ".$id."\n";
 								}
 							break;
@@ -1785,18 +1799,18 @@ class Translator{
 								}
 							break;
 							default:
-								echo "[LevelEventPacket] Unkwnon DoorSound\n";
+								echo "[LevelEventPacket] Unknown DoorSound\n";
 								return null;
 							break;
 						}
 					break;
 					case LevelEventPacket::EVENT_ADD_PARTICLE_MASK | Particle::TYPE_HUGE_EXPLODE_SEED:
-						$isparticle = true;
+						$isParticle = true;
 
 						$id = 2;
 					break;
 					case LevelEventPacket::EVENT_ADD_PARTICLE_MASK | Particle::TYPE_TERRAIN:
-						$isparticle = true;
+						$isParticle = true;
 
 						$block = BlockFactory::fromStaticRuntimeId($packet->data);//block data
 						ConvertUtils::convertBlockData(true, $block[0], $block[1]);
@@ -1809,7 +1823,7 @@ class Translator{
 						];
 					break;
 					case LevelEventPacket::EVENT_ADD_PARTICLE_MASK | Particle::TYPE_SNOWBALL_POOF:
-						$isparticle = true;
+						$isParticle = true;
 
 						$id = 31;
 					break;
@@ -1854,7 +1868,7 @@ class Translator{
 					$pk->volume = 0.5;
 					$pk->pitch = 1.0;
 					$pk->name = $name;
-				}elseif($isparticle){
+				}elseif($isParticle){
 					$pk = new ParticlePacket();
 					$pk->id = $id;
 					$pk->longDistance = false;
@@ -1995,7 +2009,7 @@ class Translator{
 						//unused
 					break;
 					default:
-						if(\pocketmine\DEBUG > 3){
+						if(DEBUG > 3){
 							echo "EntityEventPacket: ".$packet->event."\n";
 						}
 					break;
@@ -2094,7 +2108,7 @@ class Translator{
 								$pk = new SetExperiencePacket();
 								$pk->experience = $entry->getValue();//TODO: Default Value
 								$pk->level = $player->getXpLevel();//TODO: Default Value
-								$pk->totalexperience = $player->getLifetimeTotalXp();//TODO: Default Value
+								$pk->totalExperience = $player->getLifetimeTotalXp();//TODO: Default Value
 
 								$packets[] = $pk;
 							}
@@ -2183,6 +2197,8 @@ class Translator{
 				if(isset($packet->metadata[Player::DATA_PLAYER_BED_POSITION])){
 					$bedXYZ = $packet->metadata[Player::DATA_PLAYER_BED_POSITION][1];
 					if($bedXYZ !== null){
+						/** @var Vector3 $bedXYZ */
+
 						$pk = new UseBedPacket();
 						$pk->eid = $packet->entityRuntimeId;
 						$pk->bedX = $bedXYZ->getX();
@@ -2396,17 +2412,17 @@ class Translator{
 
 						$loggedInPlayers = $player->getServer()->getLoggedInPlayers();
 						foreach($packet->entries as $entry){
-							$playerdata = null;
-							$gamemode = 0;
+							$playerData = null;
+							$gameMode = 0;
 							$displayName = $entry->username;
 							if(isset($loggedInPlayers[$entry->uuid->toBinary()])){
-								$playerdata = $loggedInPlayers[$entry->uuid->toBinary()];
-								$gamemode = $playerdata->getGamemode();
-								$displayName = $playerdata->getNameTag();
+								$playerData = $loggedInPlayers[$entry->uuid->toBinary()];
+								$gameMode = $playerData->getGamemode();
+								$displayName = $playerData->getNameTag();
 							}
 
-							if($playerdata instanceof DesktopPlayer){
-								$properties = $playerdata->bigBrother_getProperties();
+							if($playerData instanceof DesktopPlayer){
+								$properties = $playerData->bigBrother_getProperties();
 							}else{
 								//TODO: Skin Problem
 								$value = [//Dummy Data
@@ -2432,7 +2448,7 @@ class Translator{
 								$entry->uuid->toBinary(),
 								TextFormat::clean($displayName),
 								$properties,
-								$gamemode,
+								$gameMode,
 								0,
 								true,
 								BigBrother::toJSON($entry->username)
@@ -2545,11 +2561,12 @@ class Translator{
 				assert($packet instanceof BatchPacket);
 				$packets = [];
 
+				/** @var BatchPacket $packet */
 				$packet->decode();
 				foreach($packet->getPackets() as $buf){
 					if(($pk = PacketPool::getPacketById(ord($buf{0}))) !== null){
 						if($pk::NETWORK_ID === 0xfe){
-							throw new \InvalidStateException("Invalid BatchPacket inside BatchPacket");
+							throw new InvalidStateException("Invalid BatchPacket inside BatchPacket");
 						}
 					}
 
@@ -2575,7 +2592,7 @@ class Translator{
 				return null;
 
 			default:
-				if(\pocketmine\DEBUG > 4){
+				if(DEBUG > 4){
 					echo "[Send][Translator] 0x".bin2hex(chr($packet->pid()))." Not implemented\n";
 				}
 				return null;

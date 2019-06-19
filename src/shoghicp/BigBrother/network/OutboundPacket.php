@@ -29,12 +29,14 @@ declare(strict_types=1);
 
 namespace shoghicp\BigBrother\network;
 
+use ErrorException;
+
 abstract class OutboundPacket extends Packet{
 
 	//Play
 	const SPAWN_OBJECT_PACKET = 0x00;
 	const SPAWN_EXPERIENCE_ORB_PACKET = 0x01;
-	//TODO SPAWN_GLOBAL_ENTITY_PACKET = 0x02;
+	const SPAWN_GLOBAL_ENTITY_PACKET = 0x02;
 	const SPAWN_MOB_PACKET = 0x03;
 	const SPAWN_PAINTING_PACKET = 0x04;
 	const SPAWN_PLAYER_PACKET = 0x05;
@@ -124,6 +126,6 @@ abstract class OutboundPacket extends Packet{
 	 * @throws
 	 */
 	protected final function decode() : void{
-		throw new \ErrorException(get_class($this) . " is subclass of OutboundPacket: don't call decode() method");
+		throw new ErrorException(get_class($this) . " is subclass of OutboundPacket: don't call decode() method");
 	}
 }

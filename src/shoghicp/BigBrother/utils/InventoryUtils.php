@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace shoghicp\BigBrother\utils;
 
+use InvalidArgumentException;
+use const pocketmine\DEBUG;
 use pocketmine\inventory\ShapedRecipe;
 use pocketmine\inventory\ShapelessRecipe;
 use pocketmine\network\mcpe\protocol\DataPacket;
@@ -55,6 +57,7 @@ use pocketmine\math\Vector3;
 use pocketmine\tile\EnderChest as TileEnderChest;
 use pocketmine\tile\Tile;
 
+use ReflectionClass;
 use shoghicp\BigBrother\DesktopPlayer;
 use shoghicp\BigBrother\network\OutboundPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\ConfirmTransactionPacket;
@@ -139,7 +142,7 @@ class InventoryUtils{
 	 * @param int &$targetWindowId
 	 * @param int &$targetInventorySlot
 	 * @return Item&
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	private function &getItemAndSlot(int $windowId, int $inventorySlot, int &$targetWindowId = null, int &$targetInventorySlot = null) : Item{
 		$targetInventorySlot = $inventorySlot;
@@ -162,7 +165,7 @@ class InventoryUtils{
 					$targetInventorySlot = $inventorySlot;
 					$retval = &$this->playerHotbarSlot[$inventorySlot];
 				}else{
-					throw new \InvalidArgumentException("inventorySlot: " . $inventorySlot . " is out of range!!");
+					throw new InvalidArgumentException("inventorySlot: " . $inventorySlot . " is out of range!!");
 				}
 			break;
 			default:
@@ -836,6 +839,7 @@ class InventoryUtils{
 			}
 		}
 
+		$pk = null;
 		if($accepted){
 			$pk = new InventoryTransactionPacket();
 			$pk->transactionType = InventoryTransactionPacket::TYPE_NORMAL;
@@ -1021,15 +1025,33 @@ class InventoryUtils{
 	public function onMobArmorEquipment(MobArmorEquipmentPacket $packet) : array{
 		$packets = [];
 
-		foreach($packet->slots as $num => $item){
-			$pk = new EntityEquipmentPacket();
-			$pk->eid = $packet->entityRuntimeId;
-			$pk->slot = 2 + 3 - $num;
-			$pk->item = $item;
-			$packets[] = $pk;
+		$pk = new EntityEquipmentPacket();
+		$pk->eid = $packet->entityRuntimeId;
+		$pk->slot = 5;
+		$pk->item = $packet->head;
+		$packets[] = $pk;
+		$this->playerArmorSlot[0] = $pk->item;
 
-			$this->playerArmorSlot[$num] = $item;
-		}
+		$pk = new EntityEquipmentPacket();
+		$pk->eid = $packet->entityRuntimeId;
+		$pk->slot = 4;
+		$pk->item = $packet->chest;
+		$packets[] = $pk;
+		$this->playerArmorSlot[1] = $pk->item;
+
+		$pk = new EntityEquipmentPacket();
+		$pk->eid = $packet->entityRuntimeId;
+		$pk->slot = 3;
+		$pk->item = $packet->legs;
+		$packets[] = $pk;
+		$this->playerArmorSlot[2] = $pk->item;
+
+		$pk = new EntityEquipmentPacket();
+		$pk->eid = $packet->entityRuntimeId;
+		$pk->slot = 2;
+		$pk->item = $packet->feet;
+		$packets[] = $pk;
+		$this->playerArmorSlot[3] = $pk->item;
 
 		return $packets;
 	}
@@ -1100,8 +1122,6 @@ class InventoryUtils{
 			}
 		}*/
 
-
-
 		$resultRecipe = null;
 		foreach($this->shapedRecipes as $jsonResult => $jsonSlotData){
 			foreach($jsonSlotData as $jsonSlotMap => $recipe){
@@ -1170,13 +1190,13 @@ class InventoryUtils{
 
 			if($action === null){
 				$errors++;
-				if(\pocketmine\DEBUG > 3){
+				if(DEBUG > 3){
 					echo "[Action Number #".$actionNumber."] error action!\n";
 				}
 				continue;
 			}
 
-			if(\pocketmine\DEBUG > 3){
+			if(DEBUG > 3){
 				echo "[Action Number #".$actionNumber."] error nothing!\n";
 			}
 
@@ -1184,20 +1204,20 @@ class InventoryUtils{
 		}
 
 		foreach($actions as $actionNumber => $action){
-			$reflection = new \ReflectionClass($action);
+			$reflection = new ReflectionClass($action);
 			if(($shortName = $reflection->getShortName()) === "SlotChangeAction"){
-				$reflection = new \ReflectionClass($action->getInventory());
+				$reflection = new ReflectionClass($action->getInventory());
 				$windowName = $reflection->getShortName();
 			}else{
 				$windowName = "CreativeInventoryAction";
 			}
 
 			if($action->isValid($this->player)){
-				if(\pocketmine\DEBUG > 3){
+				if(DEBUG > 3){
 					echo "[Action Number #".$actionNumber."][Window Name: ".$windowName."] error nothing!\n";
 				}
 			}else{
-				if(\pocketmine\DEBUG > 3){
+				if(DEBUG > 3){
 					echo "[Action Number #".$actionNumber."][Window Name: ".$windowName."] invalid Item!\n";
 					if($shortName === "SlotChangeAction"){
 						$checkItem = $action->getInventory()->getItem($action->getSlot());

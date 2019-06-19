@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace shoghicp\BigBrother;
 
 use pocketmine\Player;
+use pocketmine\Server;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\item\Item;
 use pocketmine\inventory\CraftingGrid;
@@ -44,6 +45,7 @@ use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\BatchPacket;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
 use pocketmine\network\SourceInterface;
+use pocketmine\scheduler\AsyncTask;
 use pocketmine\level\Level;
 use pocketmine\level\format\Chunk;
 use pocketmine\timings\Timings;
@@ -154,8 +156,9 @@ class DesktopPlayer extends Player{
 	 * @return int dimension of pc version converted from $level_dimension
 	 */
 	public function bigBrother_getDimensionPEToPC(int $level_dimension) : int{
+		$dimension = 0;
 		switch($level_dimension){
-			case 0://Overworld
+			case 0://Over world
 				$dimension = 0;
 			break;
 			case 1://Nether
@@ -499,23 +502,23 @@ class DesktopPlayer extends Player{
 				$this->bigBrother_properties = $onlineModeData;
 			}
 
+			$model = false;
+			$skinImage = "";
+			$capeImage = "";
 			foreach($this->bigBrother_properties as $property){
 				if($property["name"] === "textures"){
 					$textures = json_decode(base64_decode($property["value"]), true);
 
-					$model = false;
-					$skinimage = "";
 					if(isset($textures["textures"]["SKIN"])){
 						if(isset($textures["textures"]["SKIN"]["metadata"]["model"])){
 							$model = true;
 						}
 
-						$skinimage = file_get_contents($textures["textures"]["SKIN"]["url"]);
+						$skinImage = file_get_contents($textures["textures"]["SKIN"]["url"]);
 					}
 
-					$capeimage = "";
 					if(isset($textures["textures"]["CAPE"])){
-						$capeimage = file_get_contents($textures["textures"]["CAPE"]["url"]);
+						$capeImage = file_get_contents($textures["textures"]["CAPE"]["url"]);
 					}
 				}
 			}
@@ -539,10 +542,10 @@ class DesktopPlayer extends Player{
 				$pk->clientData["SkinGeometryName"] = "geometry.humanoid.custom";
 			}
 
-			$skin = new SkinUtils($skinimage);
+			$skin = new SkinUtils($skinImage);
 			$pk->clientData["SkinData"] = $skin->getSkinData();
 
-			$cape = new CapeUtils($capeimage);
+			$cape = new CapeUtils($capeImage);
 			$pk->clientData["CapeData"] = $cape->getCapeData();
 
 			$pk->chainData = ["chain" => []];
@@ -562,7 +565,56 @@ class DesktopPlayer extends Player{
 		if($token !== $this->bigBrother_checkToken){
 			$this->close("", "Invalid check token");
 		}else{
-			$this->getAuthenticateOnline($this->bigBrother_username, Binary::sha1("".$this->bigBrother_secret.$plugin->getASN1PublicKey()));
+			$username = $this->bigBrother_username;
+			$hash = Binary::sha1("".$this->bigBrother_secret.$plugin->getASN1PublicKey());
+
+			$this->getServer()->getAsyncPool()->submitTask(new class($this, $username, $hash) extends AsyncTask{
+
+				/** @var string */
+				private $username;
+				/** @var string */
+				private $hash;
+
+				/**
+				 * @param DesktopPlayer $player
+				 * @param string $username
+				 * @param string $hash
+				 */
+				public function __construct(DesktopPlayer $player, string $username, string $hash){
+					self::storeLocal($player);
+					$this->username = $username;
+					$this->hash = $hash;
+				}
+
+				/**
+				 * @override
+				 */
+				public function onRun(){
+					$result = null;
+
+					$response = Internet::getURL("https://sessionserver.mojang.com/session/minecraft/hasJoined?username=".$this->username."&serverId=".$this->hash, 5);
+					if($response !== false){
+						$result = json_decode($response, true);
+					}
+
+					$this->setResult($result);
+				}
+
+				/**
+				 * @override
+				 * @param $server
+				 */
+				public function onCompletion(Server $server){
+					$result = $this->getResult();
+					/** @var DesktopPlayer $player */
+					$player = self::fetchLocal();
+					if(is_array($result) and isset($result["id"])){
+						$player->bigBrother_authenticate($result["id"], $result["properties"]);
+					}else{
+						$player->close("", "User not premium");
+					}
+				}
+			});
 		}
 	}
 
@@ -581,64 +633,68 @@ class DesktopPlayer extends Player{
 				$pk->verifyToken = $this->bigBrother_checkToken = str_repeat("\x00", 4);
 				$this->putRawPacket($pk);
 			}else{
-				$info = $this->getProfile($username);
-				if(is_array($info)){
-					$this->bigBrother_authenticate($info["id"], $info["properties"]);
-				}
+				$this->getServer()->getAsyncPool()->submitTask(new class($this, $username) extends AsyncTask{
+
+					/** @var string */
+					private $username;
+
+					/**
+					 * @param DesktopPlayer $player
+					 * @param string $username
+					 */
+					public function __construct(DesktopPlayer $player, string $username){
+						self::storeLocal($player);
+						$this->username = $username;
+					}
+
+					/**
+					 * @override
+					 */
+					public function onRun(){
+						$profile = null;
+						$info = null;
+
+						$response = Internet::getURL("https://api.mojang.com/users/profiles/minecraft/".$this->username);
+						if($response !== false){
+							$profile = json_decode($response, true);
+						}
+
+						if(!is_array($profile)){
+							$this->setResult(false);
+							return;
+						}
+
+						$uuid = $profile["id"];
+						$response = Internet::getURL("https://sessionserver.mojang.com/session/minecraft/profile/".$uuid, 3);
+						if($response !== false){
+							$info = json_decode($response, true);
+						}
+
+						if($info === null or !isset($info["id"])){
+							$this->setResult(false);
+							return;
+						}
+
+						$this->setResult($info);
+					}
+
+					/**
+					 * @override
+					 * @param Server $server
+					 */
+					public function onCompletion(Server $server){
+						$info = $this->getResult();
+						if(is_array($info)){
+							/** @var DesktopPlayer $player */
+							$player = self::fetchLocal();
+							$player->bigBrother_authenticate($info["id"], $info["properties"]);
+						}
+					}
+
+				});
 			}
 		}
 	}
-
-	/**
-	 * @param string $username
-	 * @return array|bool profile data if success else false
-	 */
-	public function getProfile(string $username){
-		$profile = null;
-		$info = null;
-
-		$response = Internet::getURL("https://api.mojang.com/users/profiles/minecraft/".$username);
-		if($response !== false){
-			$profile = json_decode($response, true);
-		}
-
-		if(!is_array($profile)){
-			return false;
-		}
-
-		$uuid = $profile["id"];
-		$response = Internet::getURL("https://sessionserver.mojang.com/session/minecraft/profile/".$uuid, 3);
-		if($response !== false){
-			$info = json_decode($response, true);
-		}
-
-		if($info === null or !isset($info["id"])){
-			return false;
-		}
-
-		return $info;
-	}
-
-	/**
-	 * @param string $username
-	 * @param string $hash
-	 */
-	public function getAuthenticateOnline(string $username, string $hash) : void{
-		$result = null;
-
-		$response = Internet::getURL("https://sessionserver.mojang.com/session/minecraft/hasJoined?username=".$username."&serverId=".$hash, 5);
-		if($response !== false){
-			$result = json_decode($response, true);
-		}
-
-		if(is_array($result) and isset($result["id"])){
-			$this->bigBrother_authenticate($result["id"], $result["properties"]);
-		}else{
-			$this->close("", "User not premium");
-		}
-	}
-
-
 
 	/**
 	 * @param DataPacket $packet
