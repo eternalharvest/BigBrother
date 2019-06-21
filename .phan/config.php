@@ -28,19 +28,19 @@
 use Phan\Issue;
 
 return [
-	'file_list' => [
-		'vendor/pmmp/pocketmine-mp/src/PocketMine.php'
-	],
 	'directory_list' => [
 		'src',
-		'vendor/phpseclib/phpseclib',
-		'vendor/pmmp/pocketmine-mp/src',
-		'vendor/pmmp/raklib',
-		'vendor/pmmp/spl'
+		'vendor'
 	],
-	'analyzed_file_extensions' => ['php'],
 	'exclude_analysis_directory_list' => [
 		'vendor/'
 	],
+	'exclude_file_list' => [
+		'vendor/pocketmine/spl/stubs/pthreads.php'
+	],
 	'minimum_severity' => Issue::SEVERITY_LOW,
+	'plugins' => [
+		'vendor/drenso/phan-extensions/Plugin/Annotation/SymfonyAnnotationPlugin.php',
+		'vendor/drenso/phan-extensions/Plugin/DocComment/InlineVarPlugin.php'
+	]
 ];

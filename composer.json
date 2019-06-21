@@ -44,59 +44,49 @@
     "phpseclib/phpseclib": "2.0.17"
   },
   "require-dev": {
-    "phan/phan": "^2.1.0",
-    "pmmp/pocketmine-mp": "dev-master",
-    "pmmp/raklib": "dev-master",
-    "pmmp/spl": "dev-master"
+    "phan/phan": "^2.2.3",
+    "drenso/phan-extensions": "^2.5",
+    "pmmp/pocketmine-mp": "dev-master#stable",
+    "pocketmine/raklib": "^0.12.0",
+    "pocketmine/spl": "^0.3.0",
+    "pocketmine/binaryutils": "^0.1.0",
+    "pocketmine/nbt": "^0.2.6",
+    "pocketmine/math": "^0.2.0",
+    "pocketmine/snooze": "^0.1.0"
   },
   "autoload": {
     "psr-4": {
       "shoghicp\\BigBrother\\": ["src/shoghicp/BigBrother"]
     }
   },
-  "autoload-dev": {
-    "psr-4": {
-      "pocketmine\\": ["vendor/pmmp/pocketmine-mp/src/pocketmine"],
-      "raklib\\": ["vendor/pmmp/raklib"],
-      "": ["vendor/pmmp/spl"]
-    }
-  },
   "repositories": [
     {
-      "type": "package",
-      "package": {
-        "name": "pmmp/pocketmine-mp",
-        "version": "master",
-        "source": {
-          "url": "https://github.com/pmmp/PocketMine-MP",
-          "type": "git",
-          "reference": "master"
-        }
-      }
+      "type": "vcs",
+      "url": "https://github.com/pmmp/PocketMine-MP"
     },
     {
-      "type": "package",
-      "package": {
-        "name": "pmmp/raklib",
-        "version": "master",
-        "source": {
-          "url": "https://github.com/pmmp/RakLib",
-          "type": "git",
-          "reference": "master"
-        }
-      }
+      "type": "vcs",
+      "url": "https://github.com/pmmp/RakLib"
     },
     {
-      "type": "package",
-      "package": {
-        "name": "pmmp/spl",
-        "version": "master",
-        "source": {
-          "url": "https://github.com/pmmp/PocketMine-SPL",
-          "type": "git",
-          "reference": "master"
-        }
-      }
+      "type": "vcs",
+      "url": "https://github.com/pmmp/SPL"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/pmmp/BinaryUtils"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/pmmp/NBT"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/pmmp/Math"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/pmmp/Snooze"
     }
   ]
 }
