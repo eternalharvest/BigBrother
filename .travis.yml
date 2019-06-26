@@ -11,8 +11,17 @@ cache:
   directories:
     - $HOME/.composer/cache
 
-before_script:
+install:
   - echo | pecl install channel://pecl.php.net/yaml-2.0.4
+  - git clone https://github.com/pmmp/pthreads.git
+  - cd pthreads
+  - git checkout 6ca019c58b4fa09ee2ff490f2444e34bef0773d0
+  - phpize
+  - ./configure
+
+before_script:
+  - make
+  - make install
   - composer config -g github-oauth.github.com ${GITHUB_OAUTH_TOKEN}
   - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/PocketMine-MP"}'
   - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/RakLib"}'
