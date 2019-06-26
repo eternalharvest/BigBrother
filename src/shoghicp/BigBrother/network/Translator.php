@@ -527,6 +527,17 @@ class Translator{
 
 				return $pk;
 
+			case InboundPacket::VEHICLE_MOVE_PACKET:
+				if($vehicle = $player->getVehicle()){
+					$pk = new MoveEntityAbsolutePacket();
+					$pk->entityRuntimeId = $vehicle->getId();
+					$pk->position = new Vector3($packet->x, $packet->y, $packet->z);
+					$pk->xRot = $packet->yaw;
+					$pk->zRot = $packet->pitch;
+					return $pk;
+				}
+				break;
+
 			case InboundPacket::PLAYER_ABILITIES_PACKET:
 				$pk = new AdventureSettingsPacket();
 				$pk->entityUniqueId = $player->getId();

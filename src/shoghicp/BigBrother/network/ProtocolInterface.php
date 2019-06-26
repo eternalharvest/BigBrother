@@ -69,6 +69,7 @@ use shoghicp\BigBrother\network\protocol\Play\Client\TabCompletePacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\UpdateSignPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\UseEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\UseItemPacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\VehicleMovePacket;
 use shoghicp\BigBrother\utils\Binary;
 
 class ProtocolInterface implements SourceInterface{
@@ -333,6 +334,9 @@ class ProtocolInterface implements SourceInterface{
 					break;
 				case InboundPacket::PLAYER_LOOK_PACKET:
 					$pk = new PlayerLookPacket();
+					break;
+				case InboundPacket::VEHICLE_MOVE_PACKET:
+					$pk = new VehicleMovePacket();
 					break;
 				case InboundPacket::CRAFT_RECIPE_REQUEST_PACKET:
 					$pk = new CraftRecipeRequestPacket();
