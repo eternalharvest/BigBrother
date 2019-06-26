@@ -15,9 +15,21 @@ before_script:
   - echo | pecl install channel://pecl.php.net/yaml-2.0.4
   - find src/ -type f -name '*.php' | xargs -n 1 php -l
   - composer config -g github-oauth.github.com ${GITHUB_OAUTH_TOKEN}
-  - composer install --no-dev
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/PocketMine-MP"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/RakLib"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/SPL"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/BinaryUtils"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/NBT"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/Math"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/pmmp/Snooze"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/DaveRandom/CallbackValidator"}'
+  - composer config repositories.github.com vcs '{"type": "vcs", "url": "https://github.com/adhocore/php-json-comment"}'
+  - composer require --dev pocketmine/pocketmine-mp:dev-master
+  - composer require --dev php-coveralls/php-coveralls
+  - composer install
 
 script:
+  - phpunit --coverage-clover build/logs/clover.xml
   - composer build
 
 before_deploy:
@@ -32,3 +44,6 @@ deploy:
     all_branches: true
     condition: $TRAVIS_PHP_VERSION = 7.2
   file: build/bintray.json
+
+after_success:
+  - travis_retry php vendor/bin/php-coveralls -v
