@@ -1314,6 +1314,7 @@ class Translator{
 					break;*/
 					case 90;//Boat
 						$packet->type = 1;
+						$isObject = true;
 					break;
 					case 93://Lightning
 						$pk = new SpawnGlobalEntityPacket();
