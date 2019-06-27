@@ -95,6 +95,7 @@ use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use /** @noinspection PhpInternalEntityUsedInspection */
 	pocketmine\network\mcpe\protocol\types\RuntimeBlockMapping;
+use pocketmine\network\mcpe\protocol\types\EntityLink;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
 use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
 use pocketmine\network\mcpe\NetworkBinaryStream;
@@ -147,6 +148,7 @@ use shoghicp\BigBrother\network\protocol\Play\Server\RespawnPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SelectAdvancementTabPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\ServerDifficultyPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SetExperiencePacket;
+use shoghicp\BigBrother\network\protocol\Play\Server\SetPassengersPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnGlobalEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnExperienceOrbPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\SpawnMobPacket;
@@ -2239,6 +2241,34 @@ class Translator{
 				$pk->velocityY = $packet->motion->y;
 				$pk->velocityZ = $packet->motion->z;
 				return $pk;
+
+			case Info::SET_ENTITY_LINK_PACKET:
+				switch($packet->link->type){
+					case EntityLink::TYPE_REMOVE:
+						if($packet->link->toEntityUniqueId === $player->getId()){
+							if($vehicle = $player->getVehicle()){
+								$player->mountVehicle(null);
+							}
+
+							$pk = new SetPassengersPacket();
+							$pk->entityId = $packet->link->fromEntityUniqueId;
+							return $pk;
+						}
+						break;
+
+					case EntityLink::TYPE_RIDER:
+					case EntityLink::TYPE_PASSENGER:
+						if($packet->link->toEntityUniqueId === $player->getId()){
+							$player->mountVehicle($player->getLevel()->getEntity($packet->link->fromEntityUniqueId));
+
+							$pk = new SetPassengersPacket();
+							$pk->entityId = $packet->link->fromEntityUniqueId;
+							$pk->passengers[] = $packet->link->toEntityUniqueId;
+							return $pk;
+						}
+						break;
+				}
+				break;
 
 			case Info::SET_HEALTH_PACKET:
 				/** @var SetHealthPacket $packet */

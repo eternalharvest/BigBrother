@@ -32,6 +32,7 @@ namespace shoghicp\BigBrother;
 use pocketmine\network\mcpe\VerifyLoginTask;
 use pocketmine\Player;
 use pocketmine\Server;
+use pocketmine\entity\Vehicle;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\item\Item;
 use pocketmine\inventory\CraftingGrid;
@@ -108,6 +109,8 @@ class DesktopPlayer extends Player{
 		"uuid" => "",
 		"nameTag" => ""
 	];
+	/** @var Vehicle */
+	private $bigBrother_vehicle = null;
 
 	/** @var ProtocolInterface */
 	protected $interface;
@@ -373,6 +376,20 @@ class DesktopPlayer extends Player{
 
 	public function setLocale(string $locale) : void{
 		$this->locale = $locale;
+	}
+
+	/**
+	 * @param Vehicle|null $vehicle set null to unmount
+	 */
+	public function mountVehicle(?Vehicle $vehicle) : void{
+		$this->bigBrother_vehicle = $vehicle;
+	}
+
+	/**
+	 * @return Vehicle|null
+	 */
+	public function getVehicle() : ?Vehicle{
+		return $this->bigBrother_vehicle;
 	}
 
 	/**
