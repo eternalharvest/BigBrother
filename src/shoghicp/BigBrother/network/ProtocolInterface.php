@@ -53,6 +53,7 @@ use shoghicp\BigBrother\network\protocol\Play\Client\ClientSettingsPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\ClientStatusPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\CreativeInventoryActionPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\EntityActionPacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\SteerVehiclePacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\PlayerAbilitiesPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\ChatPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\CloseWindowPacket;
@@ -349,6 +350,9 @@ class ProtocolInterface implements SourceInterface{
 					break;
 				case InboundPacket::ENTITY_ACTION_PACKET:
 					$pk = new EntityActionPacket();
+					break;
+				case InboundPacket::STEER_VEHICLE_PACKET:
+					$pk = new SteerVehiclePacket();
 					break;
 				case InboundPacket::CRAFTING_BOOK_DATA_PACKET:
 					$pk = new CraftingBookDataPacket();

@@ -113,6 +113,7 @@ use shoghicp\BigBrother\network\protocol\Login\LoginDisconnectPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\ClickWindowPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\CloseWindowPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\CreativeInventoryActionPacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\SteerVehiclePacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\UseEntityPacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\AnimatePacket as STCAnimatePacket;
 use shoghicp\BigBrother\network\protocol\Play\Server\BlockActionPacket;
@@ -779,6 +780,20 @@ class Translator{
 				}
 
 				return null;
+
+			case InboundPacket::STEER_VEHICLE_PACKET:
+				if($packet->flags & SteerVehiclePacket::FLAG_UNMOUNT){
+					if($vehicle = $player->getVehicle()){
+						$pk = new InteractPacket();
+						$pk->action = InteractPacket::ACTION_LEAVE_VEHICLE;
+						$pk->target = $vehicle->getId();
+						$pk->x = $vehicle->getX();
+						$pk->y = $vehicle->getY();
+						$pk->z = $vehicle->getZ();
+						return $pk;
+					}
+				}
+				break;
 
 			case InboundPacket::ADVANCEMENT_TAB_PACKET:
 				if($packet->status === 0){
