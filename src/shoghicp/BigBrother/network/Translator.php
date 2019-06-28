@@ -539,6 +539,15 @@ class Translator{
 				}
 				break;
 
+			case InboundPacket::STEER_BOAT_PACKET:
+				if($vehicle = $player->getVehicle()){
+					//TODO handle this
+					//$packet->rightPaddleTurning;
+					//$packet->leftPaddleTurning;
+					return $pk;
+				}
+				break;
+
 			case InboundPacket::PLAYER_ABILITIES_PACKET:
 				$pk = new AdventureSettingsPacket();
 				$pk->entityUniqueId = $player->getId();

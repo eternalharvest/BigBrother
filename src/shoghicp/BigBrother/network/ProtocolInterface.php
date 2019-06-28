@@ -66,6 +66,7 @@ use shoghicp\BigBrother\network\protocol\Play\Client\PlayerPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\PlayerPositionAndLookPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\PlayerPositionPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\PluginMessagePacket;
+use shoghicp\BigBrother\network\protocol\Play\Client\SteerBoatPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\TabCompletePacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\UpdateSignPacket;
 use shoghicp\BigBrother\network\protocol\Play\Client\UseEntityPacket;
@@ -335,6 +336,9 @@ class ProtocolInterface implements SourceInterface{
 					break;
 				case InboundPacket::PLAYER_LOOK_PACKET:
 					$pk = new PlayerLookPacket();
+					break;
+				case InboundPacket::STEER_BOAT_PACKET:
+					$pk = new SteerBoatPacket();
 					break;
 				case InboundPacket::VEHICLE_MOVE_PACKET:
 					$pk = new VehicleMovePacket();
