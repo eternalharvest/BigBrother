@@ -2282,6 +2282,7 @@ class Translator{
 					case EntityLink::TYPE_REMOVE:
 						if($packet->link->toEntityUniqueId === $player->getId()){
 							if($vehicle = $player->getVehicle()){
+								$player->teleport($vehicle->asPosition()->add(0, 0.5, 0));
 								$player->mountVehicle(null);
 							}
 
