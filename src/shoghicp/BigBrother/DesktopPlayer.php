@@ -112,6 +112,9 @@ class DesktopPlayer extends Player{
 	/** @var Vehicle */
 	private $bigBrother_vehicle = null;
 
+	public $bigBrother_startRowingLeftPaddle = null;
+	public $bigBrother_startRowingRightPaddle = null;
+
 	/** @var ProtocolInterface */
 	protected $interface;
 	/** @var BigBrother */

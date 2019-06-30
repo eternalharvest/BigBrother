@@ -541,10 +541,36 @@ class Translator{
 
 			case InboundPacket::STEER_BOAT_PACKET:
 				if($vehicle = $player->getVehicle()){
-					//TODO handle this
-					//$packet->rightPaddleTurning;
-					//$packet->leftPaddleTurning;
-					return $pk;
+					$packets = [];
+
+					$time = microtime(true);
+					if($packet->rightPaddleTurning){
+						$player->bigBrother_startRowingLeftPaddle = $player->bigBrother_startRowingLeftPaddle ?? $time;
+						$elapsed = $time - $player->bigBrother_startRowingLeftPaddle;
+
+						$pk = new AnimatePacket();
+						$pk->entityRuntimeId = $player->getId();
+						$pk->action = 128; // ROW RIGHT
+						$pk->float = $elapsed;
+						$packets[] = $pk;
+					}else{
+						$player->bigBrother_startRowingLeftPaddle = null;
+					}
+
+					if($packet->leftPaddleTurning){
+						$player->bigBrother_startRowingRightPaddle = $player->bigBrother_startRowingRightPaddle ?? $time;
+						$elapsed = $time - $player->bigBrother_startRowingRightPaddle;
+
+						$pk = new AnimatePacket();
+						$pk->entityRuntimeId = $player->getId();
+						$pk->action = 129; // ROW LEFT
+						$pk->float = $elapsed;
+						$packets[] = $pk;
+					}else{
+						$player->bigBrother_startRowingRightPaddle = null;
+					}
+
+					return $packets;
 				}
 				break;
 
