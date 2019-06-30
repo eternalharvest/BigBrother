@@ -670,6 +670,10 @@ class ConvertUtils{
 
 					$newData[0] = [0, $flags];
 				break;
+				case Human::DATA_VARIANT:
+					//TODO consider entity type, currently only support boat
+					$newData[9] = [1, $d[1]];
+				break;
 				case Human::DATA_AIR://Air
 					$newData[1] = [1, $d[1]];
 				break;
@@ -697,6 +701,12 @@ class ConvertUtils{
 				case Human::DATA_ALWAYS_SHOW_NAMETAG://TODO: sendPacket?
 				case Projectile::DATA_SHOOTER_ID:
 					//Unused
+				break;
+				case Human::DATA_PADDLE_TIME_LEFT:
+					$newData[10] = [6, $d[1] > 0];
+				break;
+				case Human::DATA_PADDLE_TIME_RIGHT:
+					$newData[11] = [6, $d[1] > 0];
 				break;
 				default:
 					echo "key: ".$bottom." Not implemented\n";
