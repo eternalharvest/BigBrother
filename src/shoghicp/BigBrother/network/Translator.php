@@ -1548,6 +1548,9 @@ class Translator{
 							case 66://FallingSand
 								$baseOffset = 0.49;
 							break;
+							case 90:
+								$baseOffset = 0.35;
+							break;
 						}
 
 						$isOnGround = $entity->isOnGround();
