@@ -532,7 +532,7 @@ class Translator{
 				if($vehicle = $player->getVehicle()){
 					$pk = new MoveEntityAbsolutePacket();
 					$pk->entityRuntimeId = $vehicle->getId();
-					$pk->position = new Vector3($packet->x, $packet->y, $packet->z);
+					$pk->position = new Vector3($packet->x, $packet->y + 0.5, $packet->z);
 					$pk->xRot = $packet->yaw;
 					$pk->zRot = $packet->pitch;
 					return $pk;
