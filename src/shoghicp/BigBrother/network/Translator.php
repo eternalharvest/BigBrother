@@ -1098,6 +1098,13 @@ class Translator{
 				$pk->yaw = $packet->yaw;
 				$packets[] = $pk;
 
+				foreach($packet->links as $link){
+					$pk = new SetPassengersPacket();
+					$pk->entityId = $link->fromEntityUniqueId;
+					$pk->passengers[] = $link->toEntityUniqueId;
+					$packets[] = $pk;
+				}
+
 				$playerData = null;
 				$loggedInPlayers = $player->getServer()->getLoggedInPlayers();
 				if(isset($loggedInPlayers[$packet->uuid->toBinary()])){
@@ -1423,12 +1430,12 @@ class Translator{
 						$pk->velocityY = 0;
 						$pk->velocityZ = 0;
 					}
-
 					$packets[] = $pk;
 
 					$pk = new EntityMetadataPacket();
 					$pk->eid = $packet->entityRuntimeId;
 					$pk->metadata = $packet->metadata;
+					$packets[] = $pk;
 				}else{
 					$pk = new SpawnMobPacket();
 					$pk->eid = $packet->entityRuntimeId;
@@ -1441,9 +1448,15 @@ class Translator{
 					$pk->pitch = $packet->pitch;
 					$pk->headPitch = 0;
 					$pk->metadata = $packet->metadata;
+					$packets[] = $pk;
 				}
 
-				$packets[] = $pk;
+				foreach($packet->links as $link){
+					$pk = new SetPassengersPacket();
+					$pk->entityId = $link->fromEntityUniqueId;
+					$pk->passengers[] = $link->toEntityUniqueId;
+					$packets[] = $pk;
+				}
 
 				$pk = new EntityTeleportPacket();
 				$pk->eid = $packet->entityRuntimeId;
