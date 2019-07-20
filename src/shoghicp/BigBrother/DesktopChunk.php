@@ -148,7 +148,6 @@ class DesktopChunk{
 			}
 		}
 		if($this->isFullChunk()){
-			var_dump(strlen($chunk->getBiomeIdArray()));
 			for($i = 0; $i < 256; $i++){
 				$payload .= Binary::writeInt(ord($chunk->getBiomeIdArray()[$i]));
 			}
