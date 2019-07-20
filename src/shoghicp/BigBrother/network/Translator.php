@@ -2440,7 +2440,6 @@ class Translator{
 				$pk->chunkZ = $packet->getChunkZ();
 				$pk->isFullChunk = $chunk->isFullChunk();
 				$pk->primaryBitmap = $chunk->getBitMapData();
-				$pk->heightMaps = $chunk->getHeightMaps();
 				$pk->payload = $chunk->getChunkData();
 				$pk->blockEntities = $blockEntities;
 

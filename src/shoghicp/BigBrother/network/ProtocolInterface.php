@@ -178,7 +178,7 @@ class ProtocolInterface implements SourceInterface{
 		if(DEBUG > 4){
 			$id = bin2hex(chr($packet->pid()));
 			if($packet->pid() !== OutboundPacket::KEEP_ALIVE_PACKET){
-				echo "[Send][Interface] 0x".bin2hex(chr($packet->pid()))."\n";
+				echo "[".date("H:i:s")."][Send][Interface] 0x".bin2hex(chr($packet->pid()))."\n";
 				echo (new \ReflectionClass($packet))->getName()."\n";
 			}
 		}
@@ -275,7 +275,7 @@ class ProtocolInterface implements SourceInterface{
 	protected function handlePacket(DesktopPlayer $player, string $payload){
 		if(DEBUG > 4){
 			if(ord($payload{0}) !== InboundPacket::KEEP_ALIVE_PACKET){//KeepAlivePacket
-				echo "[Receive][Interface] 0x".bin2hex(chr(ord($payload{0})))."\n";
+				echo "[".date("H:i:s")."][Receive][Interface] 0x".bin2hex(chr(ord($payload{0})))."\n";
 			}
 		}
 

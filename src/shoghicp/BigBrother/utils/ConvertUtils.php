@@ -52,6 +52,14 @@ use pocketmine\utils\Binary;
 use UnexpectedValueException;
 
 class ConvertUtils{
+
+	const DATA_TYPE_BYTE = 0;
+	const DATA_TYPE_VARINT = 1;
+	const DATA_TYPE_FLOAT = 2;
+	const DATA_TYPE_STRING = 3;
+	const DATA_TYPE_SLOT = 6;
+	const DATA_TYPE_POS = 9;
+
 	/** @var TimingsHandler */
 	private static $timingConvertItem;
 	/** @var TimingsHandler */
@@ -718,19 +726,19 @@ class ConvertUtils{
 						$newData[4] = [7, true];
 					}
 
-					$newData[0] = [0, $flags];
+					$newData[0] = [ConvertUtils::DATA_TYPE_BYTE, $flags];
 				break;
 				case Human::DATA_AIR://Air
-					$newData[1] = [1, $d[1]];
+					$newData[1] = [ConvertUtils::DATA_TYPE_VARINT, $d[1]];
 				break;
 				case Human::DATA_NAMETAG://Custom name
-					$newData[2] = [3, str_replace("\n", "", $d[1])];//TODO
+					$newData[2] = [ConvertUtils::DATA_TYPE_STRING, str_replace("\n", "", $d[1])];//TODO
 				break;
 				case Human::DATA_FUSE_LENGTH://TNT
-					$newData[6] = [1, $d[1]];
+					$newData[6] = [ConvertUtils::DATA_TYPE_VARINT, $d[1]];
 				break;
 				case Human::DATA_POTION_COLOR:
-					$newData[8] = [1, $d[1]];
+					$newData[8] = [ConvertUtils::DATA_TYPE_VARINT, $d[1]];
 				break;
 				case Human::DATA_POTION_AMBIENT:
 					$newData[9] = [7, $d[1] ? true : false];

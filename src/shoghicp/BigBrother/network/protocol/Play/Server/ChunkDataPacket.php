@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace shoghicp\BigBrother\network\protocol\Play\Server;
 
-use pocketmine\nbt\tag\CompoundTag;
 use shoghicp\BigBrother\network\OutboundPacket;
 use shoghicp\BigBrother\utils\ConvertUtils;
 use shoghicp\BigBrother\BigBrother;
@@ -48,12 +47,8 @@ class ChunkDataPacket extends OutboundPacket{
 	public $isFullChunk;
 	/** @var int */
 	public $primaryBitmap;
-	/** @var CompoundTag */
-	public $heightMaps;
 	/** @var string */
 	public $payload;
-	/** @var string */
-	public $biomes;
 	/** @var array */
 	public $blockEntities = [];
 
@@ -66,7 +61,6 @@ class ChunkDataPacket extends OutboundPacket{
 		$this->putInt($this->chunkZ);
 		$this->putBool($this->isFullChunk);
 		$this->putVarInt($this->primaryBitmap);
-		$this->put(ConvertUtils::convertNBTDataFromPEtoPC($this->heightMaps));
 		$this->putVarInt(strlen($this->payload));
 		$this->put($this->payload);
 		$this->putVarInt(count($this->blockEntities));

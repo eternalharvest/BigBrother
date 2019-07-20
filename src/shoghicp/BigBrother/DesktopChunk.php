@@ -50,8 +50,6 @@ class DesktopChunk{
 	private $bitMap;
 	/** @var string */
 	private $chunkData;
-	/** @var CompoundTag */
-	private $heightMaps;
 
 	/**
 	 * @param DesktopPlayer $player
@@ -66,7 +64,6 @@ class DesktopChunk{
 		$this->bitMap = 0;
 
 		$this->generateChunk();
-		$this->generateHeightMaps();
 	}
 
 	public function generateChunk() : void{
@@ -81,7 +78,6 @@ class DesktopChunk{
 			$this->bitMap |= 0x01 << $num;
 
 			$palette = [];
-			$blockCount = 0;
 			$bitsPerBlock = 8;
 
 			$chunkData = "";
@@ -92,10 +88,6 @@ class DesktopChunk{
 					for($x = 0; $x < 16; ++$x){
 						$blockId = $subChunk->getBlockId($x, $y, $z);
 						$blockData = $subChunk->getBlockData($x, $y, $z);
-
-						if($blockId !== Block::AIR){
-							$blockCount++;
-						}
 
 						if($blockId == Block::FRAME_BLOCK){
 							ItemFrameBlockEntity::getItemFrame($this->player->getLevel(), $x + ($this->chunkX << 4), $y + ($num << 4), $z + ($this->chunkZ << 4), $blockData, true);
@@ -134,7 +126,7 @@ class DesktopChunk{
 			}
 
 			/* Bits Per Block & Palette Length */
-			$payload .= Binary::writeShort($blockCount).Binary::writeByte($bitsPerBlock).Binary::writeComputerVarInt(count($palette));
+			$payload .= Binary::writeByte($bitsPerBlock).Binary::writeComputerVarInt(count($palette));
 
 			/* Palette */
 			foreach($palette as $value){
@@ -146,20 +138,23 @@ class DesktopChunk{
 
 			/* Data Array */
 			$payload .= $chunkData;
+
+			/* Block Light*/
+			$payload .= $blockLightData;
+
+			/* Sky Light Only Over World */
+			if($this->player->bigBrother_getDimension() === 0){
+				$payload .= $skyLightData;
+			}
 		}
-		$payload .= $chunk->getBiomeIdArray();
+		if($this->isFullChunk()){
+			var_dump(strlen($chunk->getBiomeIdArray()));
+			for($i = 0; $i < 256; $i++){
+				$payload .= Binary::writeInt(ord($chunk->getBiomeIdArray()[$i]));
+			}
+		}
 
 		$this->chunkData = $payload;
-	}
-
-	public function generateHeightMaps(){
-		$chunk = $this->level->getChunk($this->chunkX, $this->chunkZ, false);
-		$chunk->getHeightMapArray();
-
-		$heightMaps = new CompoundTag("Heightmaps", [
-			//TODO
-		]);
-		$this->heightMaps = $heightMaps;
 	}
 
 	/**
@@ -173,7 +168,7 @@ class DesktopChunk{
 	 * @return bool
 	 */
 	public function isFullChunk(): bool{
-		return $this->bitMap === 65535;
+		return true;
 	}
 
 	/**
@@ -181,10 +176,6 @@ class DesktopChunk{
 	 */
 	public function getChunkData() : string{
 		return $this->chunkData;
-	}
-
-	public function getHeightMaps(): CompoundTag{
-		return $this->heightMaps;
 	}
 
 }

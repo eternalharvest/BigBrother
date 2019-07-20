@@ -74,21 +74,20 @@ class Binary extends \pocketmine\utils\Binary{
 			$m .= self::writeByte($d[0]);
 
 			switch($d[0]){
-				case 0://Byte
+				case ConvertUtils::DATA_TYPE_BYTE:
 					$m .= self::writeByte($d[1]);
 				break;
-				case 1://VarInt
+				case ConvertUtils::DATA_TYPE_VARINT:
 					$m .= self::writeComputerVarInt($d[1]);
 				break;
-				case 2://Float
+				case ConvertUtils::DATA_TYPE_FLOAT:
 					$m .= self::writeFloat($d[1]);
 				break;
-				case 3://String
+				case ConvertUtils::DATA_TYPE_STRING:
 				case 4://Chat
-					var_dump(strlen($d[1]));
 					$m .= self::writeComputerVarInt(strlen($d[1])) . $d[1];
 				break;
-				case 5://Slot
+				case ConvertUtils::DATA_TYPE_SLOT:
 					/** @var Item $item */
 					/*$item = $d[1];
 					if($item->getId() === 0){

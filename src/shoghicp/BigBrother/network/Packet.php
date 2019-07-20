@@ -70,8 +70,8 @@ abstract class Packet extends stdClass{
 	protected function getPosition(int &$x=null, int &$y=null, int &$z=null) : void{
 		$long = $this->getLong();
 		$x = $long >> 38;
-		$y = $long & 0xFFF;
-		$z = ($long << 26 >> 38);
+		$y = ($long >> 26) & 0xFFF;
+		$z = ($long << 38 >> 38);
 	}
 
 	protected function getFloat() : float{
@@ -180,7 +180,7 @@ abstract class Packet extends stdClass{
 	}
 
 	protected function putPosition(int $x, int $y, int $z) : void{
-		$long = (($x & 0x3FFFFFF) << 38) | (($z & 0x3FFFFFF) << 12) | ($y & 0xFFF);
+		$long = (($x & 0x3FFFFFF) << 38) | (($y & 0xFFF) << 26) | ($z & 0x3FFFFFF);
 		$this->putLong($long);
 	}
 
@@ -220,7 +220,6 @@ abstract class Packet extends stdClass{
 	}
 
 	protected function putString(string $v) : void{
-		//var_dump([$v => strlen($v)]);
 		$this->putVarInt(strlen($v));
 		$this->put($v);
 	}
