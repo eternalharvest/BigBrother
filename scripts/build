@@ -35,7 +35,7 @@ define("GITHUB_API", "https://api.github.com/repos/%s/releases");
 define("USER_AGENT", "User-Agent: Mozilla/5.0 like Gecko");
 
 $include_dirs  = ['src', 'resources', 'vendor'];
-$include_files = ['LICENSE', 'README.md', 'plugin.yml'];
+$include_files = ['LICENSE', 'README.md'];
 
 try {
 	if(ini_get("phar.readonly") == 1){
@@ -45,8 +45,8 @@ try {
 
 	@unlink(PROJECT_ROOT . REVISION_FILE);
 	@exec("git describe --tags --always --dirty", $revision, $value);
-	if($value == 0){
-		file_put_contents(PROJECT_ROOT . REVISION_FILE, $revision[0]);
+	if($revision = $value == 0 ? $revision[0] : null){
+		file_put_contents(PROJECT_ROOT . REVISION_FILE, $revision);
 	}
 
 	/**
@@ -101,6 +101,11 @@ try {
 	system($command);
 
 	$phar = new Phar(PROJECT_ROOT . BIGBROS_FILE);
+	if($revision){
+		$phar->setStub(preg_replace('/^Version:.*$/m', "Version: $revision", $phar->getStub()));
+		$phar->addFromString('plugin.yml', preg_replace('/^version:.*$/m', "version: $revision", file_get_contents(PROJECT_ROOT . '/plugin.yml')));
+	}
+
 	foreach ($include_files as $file){
 		$phar->addFile(PROJECT_ROOT . '/' . $file, $file);
 	}
