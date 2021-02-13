@@ -78,13 +78,10 @@ try {
 			mkdir(dirname(PROJECT_ROOT . DEVTOOL_FILE));
 			echo sprintf("Downloading DevTools from '%s'", $asset->browser_download_url) . PHP_EOL;
 
-			$binary = file_get_contents($asset->browser_download_url);
-			if($binary === false){
+			if(!copy($asset->browser_download_url, PROJECT_ROOT . DEVTOOL_FILE)){
 				echo "Failed to download DevTools.phar" . PHP_EOL;
 				exit(1);
 			}
-
-			file_put_contents(PROJECT_ROOT . DEVTOOL_FILE, $binary);
 		}
 	}
 
