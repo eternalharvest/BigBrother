@@ -99,7 +99,6 @@ try {
 
 	$phar = new Phar(PROJECT_ROOT . BIGBROS_FILE);
 	if($revision){
-		$phar->setStub(preg_replace('/^Version:.*$/m', "Version: $revision", $phar->getStub()));
 		$phar->addFromString('plugin.yml', preg_replace('/^version:.*$/m', "version: $revision", file_get_contents(PROJECT_ROOT . '/plugin.yml')));
 	}
 
