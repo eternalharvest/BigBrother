@@ -332,6 +332,36 @@ class BigBrother extends PluginBase implements Listener{
 		}
 	}
 
+	private function setupComposer() : bool
+	{
+		$base = $this->getFile();
+		$data = $this->getDataFolder();
+		$setup = $data . 'composer-setup.php';
+		$composer = $data . 'composer.php';
+
+		if($this->isPhar() and !is_file($autoload = $base . 'vendor/autoload.php')){
+			if(!is_file($autoload)){
+				$this->getLogger()->info("Trying to setup composer...");
+
+				$ctx = stream_context_create(['ssl' => $this->getConfig()->get('ssl', [])]);
+				copy('https://getcomposer.org/installer', $setup, $ctx);
+
+				exec(join(' ', [PHP_BINARY, $setup, '--install-dir', $data]));
+			}
+
+			$this->getLogger()->info("Trying to install composer dependencies...");
+			exec(join(' ', [PHP_BINARY, $composer, 'install', '-d', $base, '--no-dev', '-o']));
+		}
+
+		if(is_file($autoload)){
+			$this->getLogger()->info("Registering Composer autoloader...");
+			__require($autoload);
+			return true;
+		}else{
+			return false;
+		}
+	}
+
 	/**
 	 * @param string|null $message
 	 * @param int         $type

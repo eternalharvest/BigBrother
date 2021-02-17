@@ -11,3 +11,8 @@ motd: "§bPocketMine-MP server using §6§lBigBrother§r§b plugin\n§aConnect t
 
 #Use Mojang services to authenticate players
 online-mode: true
+
+#OpenSSL SSL Peer Verification
+ssl:
+  verify_peer: true
+  verify_peer_name: true
